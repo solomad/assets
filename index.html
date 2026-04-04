@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Мой архив Unity Ассетов</title>
+    <meta name="description" content="Личная коллекция лучших ассетов для Unity.">
+    <meta name="color-scheme" content="dark">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="background-globes">
+        <div class="globe globe-1"></div>
+        <div class="globe globe-2"></div>
+    </div>
+
+    <header class="glass-header">
+        <div class="header-content">
+            <h1>Мой архив Unity Ассетов</h1>
+            <p>Удобный поиск, фильтрация и хранение избранных пакетов.</p>
+        </div>
+    </header>
+
+    <main class="container">
+        <section class="controls glass-panel">
+            <div class="search-wrapper">
+                <input type="text" id="searchInput" placeholder="Поиск по названию или автору..." aria-label="Поиск">
+                <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+            </div>
+
+            <!-- Новая кнопка загрузки файла -->
+            <div class="upload-wrapper">
+                <label for="fileInput" class="upload-btn" title="Загрузить свой JSON файл">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="17 8 12 3 7 8"></polyline>
+                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                    </svg>
+                    <span>Загрузить JSON</span>
+                </label>
+                <input type="file" id="fileInput" accept=".json" style="display: none;">
+            </div>
+
+            <div class="filter-buttons">
+                <button class="filter-btn active" data-filter="All">Все</button>
+                <button class="filter-btn" data-filter="Free">Бесплатные</button>
+                <button class="filter-btn" data-filter="Paid">Платные</button>
+            </div>
+
+            <div class="sort-wrapper">
+                <select id="sortSelect" aria-label="Сортировка">
+                    <option value="default">По умолчанию</option>
+                    <option value="price-asc">Сначала дешевые</option>
+                    <option value="price-desc">Сначала дорогие</option>
+                    <option value="name-asc">По алфавиту (A-Z)</option>
+                </select>
+            </div>
+        </section>
+
+        <section id="resultsInfo" class="results-info">
+            Загрузка базы данных...
+        </section>
+
+        <section id="assetGrid" class="asset-grid">
+            <!-- Карточки будут добавлены сюда скриптом -->
+        </section>
+    </main>
+
+    <button id="backToTopBtn" class="back-to-top" aria-label="Наверх">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="18 15 12 9 6 15"></polyline>
+        </svg>
+    </button>
+
+    <script src="app.js"></script>
+</body>
+</html>
