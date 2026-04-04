@@ -67,6 +67,8 @@ document.addEventListener('DOMContentLoaded', () => {
             return {
                 ...asset,
                 parsedPrice,
+                parsedRating: parseFloat(asset.Rating) || 0,
+                parsedCount: parseInt(asset.RatingCount) || 0,
                 lowerName: (asset.Asset || '').toLowerCase(),
                 lowerPublisher: (asset.Publisher || '').toLowerCase(),
                 Label: asset.Label || 'No Label',
@@ -75,9 +77,9 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         // Unique filter values
-        const labels =[...new Set(allAssets.map(a => a.Label))].filter(Boolean).sort();
-        const categories =[...new Set(allAssets.map(a => a.Category))].filter(Boolean).sort();
-        const publishers = [...new Set(allAssets.map(a => a.Publisher))].filter(Boolean).sort((a,b) => a.toLowerCase().localeCompare(b.toLowerCase()));
+        const labels = [...new Set(allAssets.map(a => a.Label))].filter(Boolean).sort();
+        const categories = [...new Set(allAssets.map(a => a.Category))].filter(Boolean).sort();
+        const publishers =[...new Set(allAssets.map(a => a.Publisher))].filter(Boolean).sort((a,b) => a.toLowerCase().localeCompare(b.toLowerCase()));
 
         buildFilterUI(labels, categories, publishers);
         renderAssets();
@@ -164,6 +166,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (currentSort === 'name-asc') return a.lowerName.localeCompare(b.lowerName);
             if (currentSort === 'price-asc') return a.parsedPrice - b.parsedPrice;
             if (currentSort === 'price-desc') return b.parsedPrice - a.parsedPrice;
+            if (currentSort === 'rating-desc') return b.parsedRating - a.parsedRating;
+            if (currentSort === 'rating-asc') return a.parsedRating - b.parsedRating;
             return 0; // default
         });
 
@@ -181,10 +185,18 @@ document.addEventListener('DOMContentLoaded', () => {
             const displayPrice = asset.Price || '';
             const imageSrc = asset.ImageURL || 'https://via.placeholder.com/600x400?text=No+Image';
 
-            // Publisher link logic (fallback for older DB versions without PublisherURL)
             const pubContent = asset.PublisherURL 
                 ? `<a href="${getRefLink(asset.PublisherURL)}" target="_blank">${asset.Publisher}</a>`
                 : asset.Publisher;
+
+            let ratingHtml = '';
+            if (asset.parsedCount > 0) {
+                ratingHtml = `
+                <div class="asset-rating" title="Rating: ${asset.parsedRating} (${asset.parsedCount} reviews)">
+                    <svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                    ${asset.parsedRating} (${asset.parsedCount})
+                </div>`;
+            }
 
             const card = document.createElement('div');
             card.className = 'asset-card';
@@ -196,7 +208,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     <h3 class="asset-title" title="${asset.Asset}">
                         <a href="${getRefLink(asset.AssetURL)}" target="_blank">${asset.Asset}</a>
                     </h3>
-                    <div class="asset-publisher">${pubContent}</div>
+                    <div class="asset-meta">
+                        <div class="asset-publisher">${pubContent}</div>
+                        ${ratingHtml}
+                    </div>
                     <div class="asset-tags">
                         <span class="asset-tag">${asset.Label}</span>
                         <span class="asset-tag">${asset.Category}</span>

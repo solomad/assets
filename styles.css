@@ -7,6 +7,7 @@
     --border-color: #d1d5db;
     --unity-blue: #0050e6;
     --unity-blue-hover: #003cbd;
+    --star-color: #f59e0b;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -177,7 +178,7 @@ body {
 
 .asset-image {
     width: 100%;
-    aspect-ratio: 3 / 2; /* CHANGED FROM 2 / 1 to 3 / 2 */
+    aspect-ratio: 3 / 2;
     background-color: #eaeaea;
     overflow: hidden;
 }
@@ -212,9 +213,15 @@ body {
 }
 .asset-title a:hover { color: var(--unity-blue); }
 
+.asset-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
 .asset-publisher {
     font-size: 12px;
-    margin-bottom: 8px;
 }
 .asset-publisher a {
     color: var(--text-muted);
@@ -226,12 +233,27 @@ body {
     text-decoration: underline; 
 }
 
+.asset-rating {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--star-color);
+}
+.asset-rating svg {
+    width: 14px;
+    height: 14px;
+    fill: currentColor;
+    margin-bottom: 2px;
+}
+
 /* Tags fix */
 .asset-tags {
     display: flex;
     gap: 6px;
     margin-bottom: 16px;
-    flex-wrap: wrap; /* Removed flex-grow: 1 */
+    flex-wrap: wrap;
 }
 .asset-tag {
     font-size: 11px;
@@ -239,7 +261,7 @@ body {
     color: #555;
     padding: 2px 6px;
     border-radius: 4px;
-    height: fit-content; /* Prevents vertical stretching */
+    height: fit-content;
 }
 
 /* Footer fix */
@@ -249,7 +271,7 @@ body {
     align-items: center;
     border-top: 1px solid #f0f0f0;
     padding-top: 12px;
-    margin-top: auto; /* Pushes footer to the bottom, stabilizing tag heights */
+    margin-top: auto;
 }
 
 .asset-price {
@@ -281,6 +303,6 @@ body {
 .back-to-top svg { width: 20px; height: 20px; }
 
 @media (max-width: 768px) {
-    .main-layout { flex-direction: column; }
+    .main-layout { flex-direction: column-reverse; } /* Keeps sidebar at bottom on mobile */
     .sidebar { width: 100%; position: static; max-height: none; }
 }

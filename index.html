@@ -33,20 +33,22 @@
     </header>
 
     <div class="main-layout">
-        <!-- Sidebar filters -->
+        <!-- Results Grid (Now First in HTML to be on the Left) -->
+        <main class="content-area">
+            <div class="results-header">
+                <h2 id="resultsInfo">Loading database...</h2>
+            </div>
+            
+            <div id="assetGrid" class="asset-grid">
+                <!-- Cards -->
+            </div>
+        </main>
+
+        <!-- Sidebar filters (Now Second in HTML to be on the Right) -->
         <aside class="sidebar">
             <div class="sidebar-block">
                 <h3>Search by Name</h3>
                 <input type="text" id="searchInput" class="search-input" placeholder="Asset name...">
-            </div>
-
-            <!-- Publishers Moved Here -->
-            <div class="sidebar-block">
-                <h3>Publishers</h3>
-                <input type="text" id="publisherSearch" class="search-input pub-search" placeholder="Search publisher...">
-                <div class="checkbox-list scrollable-list" id="publishersList">
-                    <!-- Populated via JS -->
-                </div>
             </div>
 
             <div class="sidebar-block">
@@ -56,6 +58,8 @@
                     <option value="name-asc">Alphabetical (A-Z)</option>
                     <option value="price-asc">Price: Low to High</option>
                     <option value="price-desc">Price: High to Low</option>
+                    <option value="rating-desc">Rating: High to Low</option>
+                    <option value="rating-asc">Rating: Low to High</option>
                 </select>
             </div>
 
@@ -72,18 +76,16 @@
                     <!-- Populated via JS -->
                 </div>
             </div>
-        </aside>
 
-        <!-- Results Grid -->
-        <main class="content-area">
-            <div class="results-header">
-                <h2 id="resultsInfo">Loading database...</h2>
+            <!-- Publishers Moved Back to the Bottom -->
+            <div class="sidebar-block">
+                <h3>Publishers</h3>
+                <input type="text" id="publisherSearch" class="search-input pub-search" placeholder="Search publisher...">
+                <div class="checkbox-list scrollable-list" id="publishersList">
+                    <!-- Populated via JS -->
+                </div>
             </div>
-            
-            <div id="assetGrid" class="asset-grid">
-                <!-- Cards -->
-            </div>
-        </main>
+        </aside>
     </div>
 
     <button id="backToTopBtn" class="back-to-top" aria-label="Back to top">
