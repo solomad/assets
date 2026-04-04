@@ -8,7 +8,6 @@
     --unity-blue: #0050e6;
     --unity-blue-hover: #003cbd;
     --star-color: #f59e0b;
-    --grid-cols: 4; /* Default variable for columns */
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -48,15 +47,19 @@ body {
     font-weight: 600;
 }
 
+/* Строго горизонтальное выравнивание для правой панели */
 .nav-actions {
     display: flex;
+    flex-direction: row; /* Принудительно в строку */
     align-items: center;
-    gap: 16px;
+    gap: 20px;
+    white-space: nowrap; /* Запрет на перенос строк */
 }
 
 /* Grid Selector */
 .grid-select-wrapper {
     display: flex;
+    flex-direction: row;
     align-items: center;
     gap: 8px;
     font-size: 14px;
@@ -176,23 +179,30 @@ body {
 .results-header { margin-bottom: 20px; }
 .results-header h2 { font-size: 20px; font-weight: 600; }
 
+/* === НАДЕЖНАЯ ЛОГИКА СЕТКИ === */
 .asset-grid {
     display: grid;
-    /* Uses dynamic variable from top nav */
-    grid-template-columns: repeat(var(--grid-cols), 1fr);
     gap: 20px;
 }
 
-/* Media queries reliably override the grid regardless of dropdown */
+/* Варианты колонок (переключаются через JS) */
+.asset-grid[data-cols="3"] { grid-template-columns: repeat(3, 1fr); }
+.asset-grid[data-cols="4"] { grid-template-columns: repeat(4, 1fr); }
+.asset-grid[data-cols="5"] { grid-template-columns: repeat(5, 1fr); }
+.asset-grid[data-cols="6"] { grid-template-columns: repeat(6, 1fr); }
+
+/* Защита на мобильных устройствах (перекрывает выбор пользователя) */
 @media (max-width: 1100px) {
-    .asset-grid { grid-template-columns: repeat(3, 1fr); }
+    .asset-grid[data-cols] { grid-template-columns: repeat(3, 1fr); }
 }
-@media (max-width: 800px) {
-    .asset-grid { grid-template-columns: repeat(2, 1fr); }
+@media (max-width: 850px) {
+    .asset-grid[data-cols] { grid-template-columns: repeat(2, 1fr); }
 }
-@media (max-width: 500px) {
-    .asset-grid { grid-template-columns: 1fr; }
+@media (max-width: 550px) {
+    .asset-grid[data-cols] { grid-template-columns: 1fr; }
 }
+/* ============================== */
+
 
 /* Asset Card */
 .asset-card {
@@ -253,9 +263,15 @@ body {
 }
 .asset-title a:hover { color: var(--unity-blue); }
 
+.asset-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
 .asset-publisher {
     font-size: 12px;
-    margin-bottom: 8px;
 }
 .asset-publisher a {
     color: var(--text-muted);
@@ -272,7 +288,7 @@ body {
     display: flex;
     align-items: center;
     gap: 2px;
-    margin-bottom: 12px; /* Spaces it from tags below */
+    margin-bottom: 12px; 
     font-size: 13px;
     color: var(--text-main);
 }

@@ -29,9 +29,11 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }, { rootMargin: '50px 0px', threshold: 0.1 });
 
-    // Handle Grid Columns dynamically
+    // Handle Grid Columns dynamically (Fixed via data-attribute)
     function updateGridCols() {
-        document.documentElement.style.setProperty('--grid-cols', gridColsSelect.value);
+        if(assetGrid && gridColsSelect) {
+            assetGrid.setAttribute('data-cols', gridColsSelect.value);
+        }
     }
     gridColsSelect.addEventListener('change', updateGridCols);
     updateGridCols(); // Init call
