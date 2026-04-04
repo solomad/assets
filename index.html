@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -16,16 +16,16 @@
                 <svg viewBox="0 0 24 24" fill="white" width="24" height="24">
                     <path d="M11.23 1l-7.79 4.5v9L11.23 19l7.79-4.5v-9L11.23 1zm6.5 12.75l-6.5 3.75-6.5-3.75v-7.5l6.5-3.75 6.5 3.75v7.5z"/>
                 </svg>
-                <span>Мой Архив Ассетов</span>
+                <span>My Asset Archive</span>
             </div>
             
             <div class="nav-actions">
-                <label for="fileInput" class="upload-btn" title="Загрузить свежий data.json">
+                <label for="fileInput" class="upload-btn" title="Upload fresh data.json">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                         <polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line>
                     </svg>
-                    <span>Загрузить JSON</span>
+                    <span>Upload JSON</span>
                 </label>
                 <input type="file" id="fileInput" accept=".json" style="display: none;">
             </div>
@@ -33,59 +33,60 @@
     </header>
 
     <div class="main-layout">
-        <!-- Боковая панель фильтров -->
+        <!-- Sidebar filters -->
         <aside class="sidebar">
             <div class="sidebar-block">
-                <h3>Поиск по названию</h3>
-                <input type="text" id="searchInput" class="search-input" placeholder="Название ассета...">
+                <h3>Search by Name</h3>
+                <input type="text" id="searchInput" class="search-input" placeholder="Asset name...">
+            </div>
+
+            <!-- Publishers Moved Here -->
+            <div class="sidebar-block">
+                <h3>Publishers</h3>
+                <input type="text" id="publisherSearch" class="search-input pub-search" placeholder="Search publisher...">
+                <div class="checkbox-list scrollable-list" id="publishersList">
+                    <!-- Populated via JS -->
+                </div>
             </div>
 
             <div class="sidebar-block">
-                <h3>Сортировка</h3>
+                <h3>Sort by</h3>
                 <select id="sortSelect" class="sort-select">
-                    <option value="default">По умолчанию</option>
-                    <option value="name-asc">По алфавиту (A-Z)</option>
-                    <option value="price-asc">Сначала дешевые</option>
-                    <option value="price-desc">Сначала дорогие</option>
+                    <option value="default">Default</option>
+                    <option value="name-asc">Alphabetical (A-Z)</option>
+                    <option value="price-asc">Price: Low to High</option>
+                    <option value="price-desc">Price: High to Low</option>
                 </select>
             </div>
 
             <div class="sidebar-block">
                 <h3>Labels</h3>
                 <div class="checkbox-list" id="labelsList">
-                    <!-- Заполняется из JS -->
+                    <!-- Populated via JS -->
                 </div>
             </div>
 
             <div class="sidebar-block">
                 <h3>Categories</h3>
                 <div class="checkbox-list" id="categoriesList">
-                    <!-- Заполняется из JS -->
-                </div>
-            </div>
-
-            <div class="sidebar-block">
-                <h3>Publishers</h3>
-                <input type="text" id="publisherSearch" class="search-input pub-search" placeholder="Найти автора...">
-                <div class="checkbox-list scrollable-list" id="publishersList">
-                    <!-- Заполняется из JS -->
+                    <!-- Populated via JS -->
                 </div>
             </div>
         </aside>
 
-        <!-- Сетка с результатами -->
+        <!-- Results Grid -->
         <main class="content-area">
             <div class="results-header">
-                <h2 id="resultsInfo">Загрузка базы данных...</h2>
+                <h2 id="resultsInfo">Loading database...</h2>
             </div>
             
             <div id="assetGrid" class="asset-grid">
-                <!-- Карточки -->
+                <!-- Cards -->
             </div>
         </main>
     </div>
 
-    <button id="backToTopBtn" class="back-to-top" aria-label="Наверх">
+    <button id="backToTopBtn" class="back-to-top" aria-label="Back to top">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="18 15 12 9 6 15"></polyline>
         </svg>

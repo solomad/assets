@@ -10,9 +10,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const publishersList = document.getElementById('publishersList');
     const publisherSearch = document.getElementById('publisherSearch');
 
-    let allAssets = [];
+    let allAssets =[];
     
-    // Состояния фильтров
+    // Filter States
     let currentSearch = '';
     let currentSort = 'default';
     let selectedLabels = new Set();
@@ -28,12 +28,12 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }, { rootMargin: '50px 0px', threshold: 0.1 });
 
-    // 1. ЗАГРУЗКА ДАННЫХ
+    // 1. DATA LOADING
     fetch('data.json')
         .then(response => response.json())
         .then(data => processData(data))
         .catch(err => {
-            resultsInfo.textContent = 'База данных не найдена. Загрузите JSON файл.';
+            resultsInfo.textContent = 'Database not found. Please upload a JSON file.';
         });
 
     fileInput.addEventListener('change', (e) => {
@@ -44,13 +44,13 @@ document.addEventListener('DOMContentLoaded', () => {
             try {
                 processData(JSON.parse(event.target.result));
             } catch (err) {
-                alert("Ошибка: Неверный формат JSON.");
+                alert("Error: Invalid JSON format.");
             }
         };
         reader.readAsText(file);
     });
 
-    // 2. ОБРАБОТКА ДАННЫХ
+    // 2. DATA PROCESSING
     function processData(data) {
         if (!Array.isArray(data)) return;
 
@@ -74,16 +74,16 @@ document.addEventListener('DOMContentLoaded', () => {
             };
         });
 
-        // Собираем уникальные значения для фильтров
-        const labels = [...new Set(allAssets.map(a => a.Label))].filter(Boolean).sort();
-        const categories = [...new Set(allAssets.map(a => a.Category))].filter(Boolean).sort();
+        // Unique filter values
+        const labels =[...new Set(allAssets.map(a => a.Label))].filter(Boolean).sort();
+        const categories =[...new Set(allAssets.map(a => a.Category))].filter(Boolean).sort();
         const publishers = [...new Set(allAssets.map(a => a.Publisher))].filter(Boolean).sort((a,b) => a.toLowerCase().localeCompare(b.toLowerCase()));
 
         buildFilterUI(labels, categories, publishers);
         renderAssets();
     }
 
-    // 3. ПОСТРОЕНИЕ ИНТЕРФЕЙСА ФИЛЬТРОВ
+    // 3. UI BUILDER FOR FILTERS
     function buildFilterUI(labels, categories, publishers) {
         labelsList.innerHTML = '';
         categoriesList.innerHTML = '';
@@ -97,7 +97,7 @@ document.addEventListener('DOMContentLoaded', () => {
         categories.forEach(val => categoriesList.appendChild(createCheckbox(val, selectedCategories)));
         publishers.forEach(val => {
             const cb = createCheckbox(val, selectedPublishers);
-            cb.classList.add('pub-item'); // Класс для поиска
+            cb.classList.add('pub-item');
             cb.dataset.name = val.toLowerCase();
             publishersList.appendChild(cb);
         });
@@ -124,15 +124,12 @@ document.addEventListener('DOMContentLoaded', () => {
         return label;
     }
 
-    // 4. ПОИСК И СОРТИРОВКА
-    
-    // Поиск по названию ассета (СТРОГО название)
+    // 4. SEARCH & SORTING
     searchInput.addEventListener('input', (e) => {
         currentSearch = e.target.value.toLowerCase();
         renderAssets();
     });
 
-    // Поиск по списку разработчиков в сайдбаре
     publisherSearch.addEventListener('input', (e) => {
         const term = e.target.value.toLowerCase();
         const items = publishersList.querySelectorAll('.pub-item');
@@ -147,25 +144,22 @@ document.addEventListener('DOMContentLoaded', () => {
         renderAssets();
     });
 
-    // 5. ГЛАВНАЯ ФУНКЦИЯ ОТРИСОВКИ
+    // Helper for affiliate links
+    const getRefLink = (url) => {
+        if (!url) return '#';
+        return url.includes('?') ? url + '&aid=1100lebp8' : url + '?aid=1100lebp8';
+    };
+
+    // 5. MAIN RENDER FUNCTION
     function renderAssets() {
         const filtered = allAssets.filter(asset => {
-            // Поиск по названию
             if (currentSearch && !asset.lowerName.includes(currentSearch)) return false;
-            
-            // Фильтр Labels
             if (selectedLabels.size > 0 && !selectedLabels.has(asset.Label)) return false;
-            
-            // Фильтр Categories
             if (selectedCategories.size > 0 && !selectedCategories.has(asset.Category)) return false;
-            
-            // Фильтр Publishers
             if (selectedPublishers.size > 0 && !selectedPublishers.has(asset.Publisher)) return false;
-            
             return true;
         });
 
-        // Сортировка
         filtered.sort((a, b) => {
             if (currentSort === 'name-asc') return a.lowerName.localeCompare(b.lowerName);
             if (currentSort === 'price-asc') return a.parsedPrice - b.parsedPrice;
@@ -173,11 +167,11 @@ document.addEventListener('DOMContentLoaded', () => {
             return 0; // default
         });
 
-        resultsInfo.textContent = `Найдено ассетов: ${filtered.length}`;
+        resultsInfo.textContent = `Assets found: ${filtered.length}`;
         assetGrid.innerHTML = '';
 
         if (filtered.length === 0) {
-            assetGrid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:2rem;color:#666">Ничего не найдено</div>';
+            assetGrid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:2rem;color:#666">No assets found</div>';
             return;
         }
 
@@ -185,24 +179,30 @@ document.addEventListener('DOMContentLoaded', () => {
             const isFree = asset.Price === 'Free' || asset.Price === 'Owned' || !asset.Price;
             const priceClass = isFree ? 'asset-price free' : 'asset-price';
             const displayPrice = asset.Price || '';
-            const imageSrc = asset.ImageURL || 'https://via.placeholder.com/400x200?text=No+Image';
+            const imageSrc = asset.ImageURL || 'https://via.placeholder.com/600x400?text=No+Image';
+
+            // Publisher link logic (fallback for older DB versions without PublisherURL)
+            const pubContent = asset.PublisherURL 
+                ? `<a href="${getRefLink(asset.PublisherURL)}" target="_blank">${asset.Publisher}</a>`
+                : asset.Publisher;
 
             const card = document.createElement('div');
             card.className = 'asset-card';
             card.innerHTML = `
                 <div class="asset-image">
-                    <img src="${imageSrc}" loading="lazy" onerror="this.src='https://via.placeholder.com/400x200?text=No+Image'">
+                    <img src="${imageSrc}" loading="lazy" onerror="this.src='https://via.placeholder.com/600x400?text=No+Image'">
                 </div>
                 <div class="asset-content">
-                    <h3 class="asset-title" title="${asset.Asset}">${asset.Asset}</h3>
-                    <div class="asset-publisher">${asset.Publisher}</div>
+                    <h3 class="asset-title" title="${asset.Asset}">
+                        <a href="${getRefLink(asset.AssetURL)}" target="_blank">${asset.Asset}</a>
+                    </h3>
+                    <div class="asset-publisher">${pubContent}</div>
                     <div class="asset-tags">
                         <span class="asset-tag">${asset.Label}</span>
                         <span class="asset-tag">${asset.Category}</span>
                     </div>
                     <div class="asset-footer">
                         <span class="${priceClass}">${displayPrice}</span>
-                        <a href="${asset.AssetURL}" target="_blank" class="store-btn">В магазин</a>
                     </div>
                 </div>
             `;
