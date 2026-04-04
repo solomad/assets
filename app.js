@@ -5,13 +5,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const resultsInfo = document.getElementById('resultsInfo');
     const fileInput = document.getElementById('fileInput');
     
-    // Контейнеры фильтров
     const labelsList = document.getElementById('labelsList');
     const categoriesList = document.getElementById('categoriesList');
     const publishersList = document.getElementById('publishersList');
     const publisherSearch = document.getElementById('publisherSearch');
 
-    let allAssets =[];
+    let allAssets = [];
     
     // Состояния фильтров
     let currentSearch = '';
@@ -29,12 +28,12 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }, { rootMargin: '50px 0px', threshold: 0.1 });
 
-    // Инициализация
+    // 1. ЗАГРУЗКА ДАННЫХ
     fetch('data.json')
         .then(response => response.json())
         .then(data => processData(data))
         .catch(err => {
-            resultsInfo.textContent = 'Нет данных. Загрузите файл JSON с помощью кнопки вверху.';
+            resultsInfo.textContent = 'База данных не найдена. Загрузите JSON файл.';
         });
 
     fileInput.addEventListener('change', (e) => {
@@ -45,104 +44,102 @@ document.addEventListener('DOMContentLoaded', () => {
             try {
                 processData(JSON.parse(event.target.result));
             } catch (err) {
-                alert("Ошибка чтения JSON файла.");
+                alert("Ошибка: Неверный формат JSON.");
             }
         };
         reader.readAsText(file);
     });
 
+    // 2. ОБРАБОТКА ДАННЫХ
     function processData(data) {
-        let uniqueLabels = new Set();
-        let uniqueCategories = new Set();
-        let uniquePublishers = new Set();
+        if (!Array.isArray(data)) return;
 
         allAssets = data.map(asset => {
-            // Обработка цены для сортировки
             let parsedPrice = 0;
             let priceStr = String(asset.Price || '').toLowerCase();
-            
-            if (priceStr === 'free' || priceStr === 'бесплатно' || priceStr === '') {
+            if (priceStr === 'free' || priceStr === 'бесплатно' || priceStr === '' || priceStr === 'owned') {
                 parsedPrice = 0;
             } else {
                 const match = priceStr.match(/[\d.]+/);
                 parsedPrice = match ? parseFloat(match[0]) : 0;
             }
 
-            // Сбор уникальных фильтров
-            if(asset.Label) uniqueLabels.add(asset.Label);
-            if(asset.Category) uniqueCategories.add(asset.Category);
-            if(asset.Publisher) uniquePublishers.add(asset.Publisher);
-
             return {
                 ...asset,
                 parsedPrice,
                 lowerName: (asset.Asset || '').toLowerCase(),
-                lowerPublisher: (asset.Publisher || '').toLowerCase()
+                lowerPublisher: (asset.Publisher || '').toLowerCase(),
+                Label: asset.Label || 'No Label',
+                Category: asset.Category || 'Other'
             };
         });
 
-        buildFilters(uniqueLabels, uniqueCategories, uniquePublishers);
+        // Собираем уникальные значения для фильтров
+        const labels = [...new Set(allAssets.map(a => a.Label))].filter(Boolean).sort();
+        const categories = [...new Set(allAssets.map(a => a.Category))].filter(Boolean).sort();
+        const publishers = [...new Set(allAssets.map(a => a.Publisher))].filter(Boolean).sort((a,b) => a.toLowerCase().localeCompare(b.toLowerCase()));
+
+        buildFilterUI(labels, categories, publishers);
         renderAssets();
     }
 
-    // Создание списков чекбоксов
-    function buildFilters(labels, categories, publishers) {
+    // 3. ПОСТРОЕНИЕ ИНТЕРФЕЙСА ФИЛЬТРОВ
+    function buildFilterUI(labels, categories, publishers) {
         labelsList.innerHTML = '';
         categoriesList.innerHTML = '';
         publishersList.innerHTML = '';
+        
         selectedLabels.clear();
         selectedCategories.clear();
         selectedPublishers.clear();
 
-        Array.from(labels).sort().forEach(label => {
-            labelsList.appendChild(createCheckbox(label, selectedLabels, renderAssets));
-        });
-
-        Array.from(categories).sort().forEach(cat => {
-            categoriesList.appendChild(createCheckbox(cat, selectedCategories, renderAssets));
-        });
-
-        Array.from(publishers).sort((a,b) => a.toLowerCase().localeCompare(b.toLowerCase())).forEach(pub => {
-            let el = createCheckbox(pub, selectedPublishers, renderAssets);
-            el.classList.add('pub-item');
-            el.dataset.name = pub.toLowerCase();
-            publishersList.appendChild(el);
+        labels.forEach(val => labelsList.appendChild(createCheckbox(val, selectedLabels)));
+        categories.forEach(val => categoriesList.appendChild(createCheckbox(val, selectedCategories)));
+        publishers.forEach(val => {
+            const cb = createCheckbox(val, selectedPublishers);
+            cb.classList.add('pub-item'); // Класс для поиска
+            cb.dataset.name = val.toLowerCase();
+            publishersList.appendChild(cb);
         });
     }
 
-    function createCheckbox(value, targetSet, callback) {
+    function createCheckbox(text, targetSet) {
         const label = document.createElement('label');
         label.className = 'filter-checkbox';
         
         const input = document.createElement('input');
         input.type = 'checkbox';
-        input.value = value;
+        input.value = text;
         input.addEventListener('change', (e) => {
-            if (e.target.checked) targetSet.add(value);
-            else targetSet.delete(value);
-            callback();
+            if (e.target.checked) targetSet.add(text);
+            else targetSet.delete(text);
+            renderAssets();
         });
 
         const span = document.createElement('span');
-        span.textContent = value;
+        span.textContent = text;
 
         label.appendChild(input);
         label.appendChild(span);
         return label;
     }
 
-    // Локальный поиск по авторам в сайдбаре
-    publisherSearch.addEventListener('input', (e) => {
-        const term = e.target.value.toLowerCase();
-        document.querySelectorAll('.pub-item').forEach(item => {
-            if (item.dataset.name.includes(term)) item.classList.remove('hidden');
-            else item.classList.add('hidden');
-        });
-    });
-
+    // 4. ПОИСК И СОРТИРОВКА
+    
+    // Поиск по названию ассета (СТРОГО название)
     searchInput.addEventListener('input', (e) => {
         currentSearch = e.target.value.toLowerCase();
         renderAssets();
+    });
+
+    // Поиск по списку разработчиков в сайдбаре
+    publisherSearch.addEventListener('input', (e) => {
+        const term = e.target.value.toLowerCase();
+        const items = publishersList.querySelectorAll('.pub-item');
+        items.forEach(item => {
+            const isMatch = item.dataset.name.includes(term);
+            item.style.display = isMatch ? 'flex' : 'none';
+        });
     });
 
     sortSelect.addEventListener('change', (e) => {
@@ -150,66 +147,68 @@ document.addEventListener('DOMContentLoaded', () => {
         renderAssets();
     });
 
+    // 5. ГЛАВНАЯ ФУНКЦИЯ ОТРИСОВКИ
     function renderAssets() {
         const filtered = allAssets.filter(asset => {
-            // Поиск по имени
+            // Поиск по названию
             if (currentSearch && !asset.lowerName.includes(currentSearch)) return false;
             
-            // Фильтры (если множество пустое - значит ничего не выбрано, показываем всё)
+            // Фильтр Labels
             if (selectedLabels.size > 0 && !selectedLabels.has(asset.Label)) return false;
+            
+            // Фильтр Categories
             if (selectedCategories.size > 0 && !selectedCategories.has(asset.Category)) return false;
+            
+            // Фильтр Publishers
             if (selectedPublishers.size > 0 && !selectedPublishers.has(asset.Publisher)) return false;
             
             return true;
         });
 
         // Сортировка
-        if (currentSort !== 'default') {
-            filtered.sort((a, b) => {
-                if (currentSort === 'name-asc') return a.lowerName.localeCompare(b.lowerName);
-                if (currentSort === 'price-asc') return a.parsedPrice - b.parsedPrice;
-                if (currentSort === 'price-desc') return b.parsedPrice - a.parsedPrice;
-                return 0;
-            });
-        }
+        filtered.sort((a, b) => {
+            if (currentSort === 'name-asc') return a.lowerName.localeCompare(b.lowerName);
+            if (currentSort === 'price-asc') return a.parsedPrice - b.parsedPrice;
+            if (currentSort === 'price-desc') return b.parsedPrice - a.parsedPrice;
+            return 0; // default
+        });
 
         resultsInfo.textContent = `Найдено ассетов: ${filtered.length}`;
         assetGrid.innerHTML = '';
 
-        let html = '';
-        filtered.forEach((asset) => {
-            // Цена и бейджики
-            const isFree = String(asset.Price).toLowerCase() === 'free' || String(asset.Price).toLowerCase() === 'бесплатно';
+        if (filtered.length === 0) {
+            assetGrid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:2rem;color:#666">Ничего не найдено</div>';
+            return;
+        }
+
+        filtered.forEach(asset => {
+            const isFree = asset.Price === 'Free' || asset.Price === 'Owned' || !asset.Price;
             const priceClass = isFree ? 'asset-price free' : 'asset-price';
-            const displayPrice = isFree ? 'Free' : asset.Price;
-            
-            // Если цены нет вообще - блок скрывается
-            const priceHtml = displayPrice ? `<span class="${priceClass}">${displayPrice}</span>` : '';
+            const displayPrice = asset.Price || '';
+            const imageSrc = asset.ImageURL || 'https://via.placeholder.com/400x200?text=No+Image';
 
-            const imageSrc = asset.ImageURL || 'https://via.placeholder.com/400x200/eaeaea/888888?text=No+Image';
-
-            html += `
-                <div class="asset-card">
-                    <div class="asset-image">
-                        <img src="${imageSrc}" loading="lazy" onerror="this.src='https://via.placeholder.com/400x200/eaeaea/888888?text=No+Image'" />
+            const card = document.createElement('div');
+            card.className = 'asset-card';
+            card.innerHTML = `
+                <div class="asset-image">
+                    <img src="${imageSrc}" loading="lazy" onerror="this.src='https://via.placeholder.com/400x200?text=No+Image'">
+                </div>
+                <div class="asset-content">
+                    <h3 class="asset-title" title="${asset.Asset}">${asset.Asset}</h3>
+                    <div class="asset-publisher">${asset.Publisher}</div>
+                    <div class="asset-tags">
+                        <span class="asset-tag">${asset.Label}</span>
+                        <span class="asset-tag">${asset.Category}</span>
                     </div>
-                    <div class="asset-content">
-                        <h3 class="asset-title" title="${asset.Asset}">${asset.Asset}</h3>
-                        <div class="asset-publisher">${asset.Publisher}</div>
-                        <div class="asset-tags">
-                            ${asset.Label ? `<span class="asset-tag">${asset.Label}</span>` : ''}
-                            ${asset.Category ? `<span class="asset-tag">${asset.Category}</span>` : ''}
-                        </div>
-                        <div class="asset-footer">
-                            ${priceHtml}
-                            <a href="${asset.AssetURL}" target="_blank" class="store-btn">В магазин</a>
-                        </div>
+                    <div class="asset-footer">
+                        <span class="${priceClass}">${displayPrice}</span>
+                        <a href="${asset.AssetURL}" target="_blank" class="store-btn">В магазин</a>
                     </div>
                 </div>
             `;
+            assetGrid.appendChild(card);
+            observer.observe(card);
         });
-        assetGrid.innerHTML = html;
-        document.querySelectorAll('.asset-card').forEach(card => observer.observe(card));
     }
 
     const backToTopBtn = document.getElementById('backToTopBtn');
