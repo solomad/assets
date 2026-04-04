@@ -10,7 +10,6 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <!-- Верхняя темная панель (в стиле Unity) -->
     <header class="top-nav">
         <div class="nav-content">
             <div class="nav-logo">
@@ -37,8 +36,8 @@
         <!-- Боковая панель фильтров -->
         <aside class="sidebar">
             <div class="sidebar-block">
-                <h3>Поиск</h3>
-                <input type="text" id="searchInput" class="search-input" placeholder="Название или автор...">
+                <h3>Поиск по названию</h3>
+                <input type="text" id="searchInput" class="search-input" placeholder="Название ассета...">
             </div>
 
             <div class="sidebar-block">
@@ -52,20 +51,24 @@
             </div>
 
             <div class="sidebar-block">
-                <h3>Категория цены</h3>
-                <div class="filter-group">
-                    <label class="filter-radio">
-                        <input type="radio" name="priceFilter" value="All" checked>
-                        <span>Все ассеты</span>
-                    </label>
-                    <label class="filter-radio">
-                        <input type="radio" name="priceFilter" value="Free">
-                        <span>Бесплатные / В библиотеке</span>
-                    </label>
-                    <label class="filter-radio">
-                        <input type="radio" name="priceFilter" value="Paid">
-                        <span>Платные</span>
-                    </label>
+                <h3>Labels</h3>
+                <div class="checkbox-list" id="labelsList">
+                    <!-- Заполняется из JS -->
+                </div>
+            </div>
+
+            <div class="sidebar-block">
+                <h3>Categories</h3>
+                <div class="checkbox-list" id="categoriesList">
+                    <!-- Заполняется из JS -->
+                </div>
+            </div>
+
+            <div class="sidebar-block">
+                <h3>Publishers</h3>
+                <input type="text" id="publisherSearch" class="search-input pub-search" placeholder="Найти автора...">
+                <div class="checkbox-list scrollable-list" id="publishersList">
+                    <!-- Заполняется из JS -->
                 </div>
             </div>
         </aside>
@@ -81,6 +84,12 @@
             </div>
         </main>
     </div>
+
+    <button id="backToTopBtn" class="back-to-top" aria-label="Наверх">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="18 15 12 9 6 15"></polyline>
+        </svg>
+    </button>
 
     <script src="app.js"></script>
 </body>
