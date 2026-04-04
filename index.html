@@ -3,71 +3,81 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<meta name="color-scheme" content="light">
-    <title>My Assets - Archive</title>
+    <title>Unity Asset Archive</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <header class="navbar">
-        <div class="logo">My Assets Archive</div>
-        <div class="navbar-actions">
-            <label for="fileInput" class="upload-btn">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
-                Загрузить data.json
-            </label>
-            <input type="file" id="fileInput" accept=".json" style="display: none;">
-            <a href="https://github.com/solomad/assets" target="_blank" class="github-link">GitHub</a>
+    <!-- Верхняя темная панель (в стиле Unity) -->
+    <header class="top-nav">
+        <div class="nav-content">
+            <div class="nav-logo">
+                <svg viewBox="0 0 24 24" fill="white" width="24" height="24">
+                    <path d="M11.23 1l-7.79 4.5v9L11.23 19l7.79-4.5v-9L11.23 1zm6.5 12.75l-6.5 3.75-6.5-3.75v-7.5l6.5-3.75 6.5 3.75v7.5z"/>
+                </svg>
+                <span>Мой Архив Ассетов</span>
+            </div>
+            
+            <div class="nav-actions">
+                <label for="fileInput" class="upload-btn" title="Загрузить свежий data.json">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line>
+                    </svg>
+                    <span>Загрузить JSON</span>
+                </label>
+                <input type="file" id="fileInput" accept=".json" style="display: none;">
+            </div>
         </div>
     </header>
 
-    <div class="main-container">
+    <div class="main-layout">
         <!-- Боковая панель фильтров -->
         <aside class="sidebar">
-            <div class="filter-section search-section">
-                <input type="text" id="searchInput" placeholder="Search for my assets...">
+            <div class="sidebar-block">
+                <h3>Поиск</h3>
+                <input type="text" id="searchInput" class="search-input" placeholder="Название или автор...">
             </div>
 
-            <div class="filter-section">
-                <h3>License / Price</h3>
-                <div class="radio-group">
-                    <label class="radio-label">
+            <div class="sidebar-block">
+                <h3>Сортировка</h3>
+                <select id="sortSelect" class="sort-select">
+                    <option value="default">По умолчанию</option>
+                    <option value="name-asc">По алфавиту (A-Z)</option>
+                    <option value="price-asc">Сначала дешевые</option>
+                    <option value="price-desc">Сначала дорогие</option>
+                </select>
+            </div>
+
+            <div class="sidebar-block">
+                <h3>Категория цены</h3>
+                <div class="filter-group">
+                    <label class="filter-radio">
                         <input type="radio" name="priceFilter" value="All" checked>
-                        <span class="custom-radio"></span> Все
+                        <span>Все ассеты</span>
                     </label>
-                    <label class="radio-label">
+                    <label class="filter-radio">
                         <input type="radio" name="priceFilter" value="Free">
-                        <span class="custom-radio"></span> Бесплатные
+                        <span>Бесплатные / В библиотеке</span>
                     </label>
-                    <label class="radio-label">
+                    <label class="filter-radio">
                         <input type="radio" name="priceFilter" value="Paid">
-                        <span class="custom-radio"></span> Платные
+                        <span>Платные</span>
                     </label>
                 </div>
-            </div>
-            
-            <div class="sidebar-info" id="dbInfo">
-                Ожидание данных...
             </div>
         </aside>
 
-        <!-- Основной контент (список) -->
-        <main class="content">
-            <div class="content-header">
-                <div class="results-count" id="resultsCount">0 items</div>
-                <div class="sort-controls">
-                    <span class="sort-label">Sort by:</span>
-                    <select id="sortSelect" class="sort-select">
-                        <option value="default">Default</option>
-                        <option value="name-asc">Name (A-Z)</option>
-                        <option value="name-desc">Name (Z-A)</option>
-                        <option value="price-asc">Price (Low to High)</option>
-                        <option value="price-desc">Price (High to Low)</option>
-                    </select>
-                </div>
+        <!-- Сетка с результатами -->
+        <main class="content-area">
+            <div class="results-header">
+                <h2 id="resultsInfo">Загрузка базы данных...</h2>
             </div>
-
-            <div class="asset-list" id="assetList">
-                <!-- Карточки генерируются здесь -->
+            
+            <div id="assetGrid" class="asset-grid">
+                <!-- Карточки -->
             </div>
         </main>
     </div>
