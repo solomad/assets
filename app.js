@@ -4,6 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const sortSelect = document.getElementById('sortSelect');
     const resultsInfo = document.getElementById('resultsInfo');
     const fileInput = document.getElementById('fileInput');
+    const gridColsSelect = document.getElementById('gridColsSelect');
     
     const labelsList = document.getElementById('labelsList');
     const categoriesList = document.getElementById('categoriesList');
@@ -27,6 +28,13 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }, { rootMargin: '50px 0px', threshold: 0.1 });
+
+    // Handle Grid Columns dynamically
+    function updateGridCols() {
+        document.documentElement.style.setProperty('--grid-cols', gridColsSelect.value);
+    }
+    gridColsSelect.addEventListener('change', updateGridCols);
+    updateGridCols(); // Init call
 
     // 1. DATA LOADING
     fetch('data.json')
@@ -76,9 +84,8 @@ document.addEventListener('DOMContentLoaded', () => {
             };
         });
 
-        // Unique filter values
-        const labels = [...new Set(allAssets.map(a => a.Label))].filter(Boolean).sort();
-        const categories = [...new Set(allAssets.map(a => a.Category))].filter(Boolean).sort();
+        const labels =[...new Set(allAssets.map(a => a.Label))].filter(Boolean).sort();
+        const categories =[...new Set(allAssets.map(a => a.Category))].filter(Boolean).sort();
         const publishers =[...new Set(allAssets.map(a => a.Publisher))].filter(Boolean).sort((a,b) => a.toLowerCase().localeCompare(b.toLowerCase()));
 
         buildFilterUI(labels, categories, publishers);
@@ -146,11 +153,29 @@ document.addEventListener('DOMContentLoaded', () => {
         renderAssets();
     });
 
-    // Helper for affiliate links
     const getRefLink = (url) => {
         if (!url) return '#';
         return url.includes('?') ? url + '&aid=1100lebp8' : url + '?aid=1100lebp8';
     };
+
+    // Helper to generate Star Rating HTML
+    function getStarsHtml(rating, count) {
+        if (count === 0 || !rating) return '';
+        let stars = '';
+        for (let i = 1; i <= 5; i++) {
+            if (rating >= i) {
+                // Full Star
+                stars += `<svg class="star filled" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>`;
+            } else if (rating >= i - 0.5) {
+                // Half Star (using gradient defined in HTML)
+                stars += `<svg class="star half" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>`;
+            } else {
+                // Empty Star
+                stars += `<svg class="star empty" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>`;
+            }
+        }
+        return `<div class="rating-stars" title="Rating: ${rating} (${count} reviews)">${stars} <span class="rating-count">(${count})</span></div>`;
+    }
 
     // 5. MAIN RENDER FUNCTION
     function renderAssets() {
@@ -166,8 +191,18 @@ document.addEventListener('DOMContentLoaded', () => {
             if (currentSort === 'name-asc') return a.lowerName.localeCompare(b.lowerName);
             if (currentSort === 'price-asc') return a.parsedPrice - b.parsedPrice;
             if (currentSort === 'price-desc') return b.parsedPrice - a.parsedPrice;
-            if (currentSort === 'rating-desc') return b.parsedRating - a.parsedRating;
-            if (currentSort === 'rating-asc') return a.parsedRating - b.parsedRating;
+            
+            // Fixed Rating Logic
+            if (currentSort === 'rating-desc') {
+                if (b.parsedRating !== a.parsedRating) return b.parsedRating - a.parsedRating;
+                return b.parsedCount - a.parsedCount; // Tie-breaker: higher review count first
+            }
+            if (currentSort === 'rating-asc') {
+                if (a.parsedRating === 0 && b.parsedRating !== 0) return 1; // Put unrated at the very bottom
+                if (b.parsedRating === 0 && a.parsedRating !== 0) return -1;
+                if (a.parsedRating !== b.parsedRating) return a.parsedRating - b.parsedRating;
+                return a.parsedCount - b.parsedCount; // Tie-breaker: lower review count first
+            }
             return 0; // default
         });
 
@@ -189,14 +224,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 ? `<a href="${getRefLink(asset.PublisherURL)}" target="_blank">${asset.Publisher}</a>`
                 : asset.Publisher;
 
-            let ratingHtml = '';
-            if (asset.parsedCount > 0) {
-                ratingHtml = `
-                <div class="asset-rating" title="Rating: ${asset.parsedRating} (${asset.parsedCount} reviews)">
-                    <svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
-                    ${asset.parsedRating} (${asset.parsedCount})
-                </div>`;
-            }
+            const ratingHtml = getStarsHtml(asset.parsedRating, asset.parsedCount);
 
             const card = document.createElement('div');
             card.className = 'asset-card';
@@ -208,10 +236,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     <h3 class="asset-title" title="${asset.Asset}">
                         <a href="${getRefLink(asset.AssetURL)}" target="_blank">${asset.Asset}</a>
                     </h3>
-                    <div class="asset-meta">
-                        <div class="asset-publisher">${pubContent}</div>
-                        ${ratingHtml}
-                    </div>
+                    <div class="asset-publisher">${pubContent}</div>
+                    
+                    ${ratingHtml}
+
                     <div class="asset-tags">
                         <span class="asset-tag">${asset.Label}</span>
                         <span class="asset-tag">${asset.Category}</span>

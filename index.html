@@ -10,6 +10,16 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+    <!-- Hidden SVG for half-star gradient -->
+    <svg width="0" height="0" style="position: absolute; width: 0; height: 0; overflow: hidden;">
+        <defs>
+            <linearGradient id="halfStarGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="50%" stop-color="#f59e0b" />
+                <stop offset="50%" stop-color="#d1d5db" />
+            </linearGradient>
+        </defs>
+    </svg>
+
     <header class="top-nav">
         <div class="nav-content">
             <div class="nav-logo">
@@ -20,6 +30,16 @@
             </div>
             
             <div class="nav-actions">
+                <div class="grid-select-wrapper">
+                    <label for="gridColsSelect">Cards/Row:</label>
+                    <select id="gridColsSelect" class="grid-select">
+                        <option value="3">3</option>
+                        <option value="4" selected>4</option>
+                        <option value="5">5</option>
+                        <option value="6">6</option>
+                    </select>
+                </div>
+
                 <label for="fileInput" class="upload-btn" title="Upload fresh data.json">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
@@ -33,7 +53,7 @@
     </header>
 
     <div class="main-layout">
-        <!-- Results Grid (Now First in HTML to be on the Left) -->
+        <!-- Results Grid -->
         <main class="content-area">
             <div class="results-header">
                 <h2 id="resultsInfo">Loading database...</h2>
@@ -44,7 +64,7 @@
             </div>
         </main>
 
-        <!-- Sidebar filters (Now Second in HTML to be on the Right) -->
+        <!-- Sidebar filters -->
         <aside class="sidebar">
             <div class="sidebar-block">
                 <h3>Search by Name</h3>
@@ -77,7 +97,6 @@
                 </div>
             </div>
 
-            <!-- Publishers Moved Back to the Bottom -->
             <div class="sidebar-block">
                 <h3>Publishers</h3>
                 <input type="text" id="publisherSearch" class="search-input pub-search" placeholder="Search publisher...">
