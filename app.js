@@ -1,37 +1,27 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const assetGrid = document.getElementById('assetGrid');
+    const assetList = document.getElementById('assetList');
     const searchInput = document.getElementById('searchInput');
-    const filterBtns = document.querySelectorAll('.filter-btn');
+    const radioBtns = document.querySelectorAll('input[name="priceFilter"]');
     const sortSelect = document.getElementById('sortSelect');
-    const resultsInfo = document.getElementById('resultsInfo');
+    const resultsCount = document.getElementById('resultsCount');
     const fileInput = document.getElementById('fileInput');
+    const dbInfo = document.getElementById('dbInfo');
 
-    let allAssets = [];
-
-    // Анимация появления
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                entry.target.classList.add('visible');
-                observer.unobserve(entry.target);
-            }
-        });
-    }, { rootMargin: '50px 0px', threshold: 0.1 });
-
-    let currentFilter = 'All'; 
+    let allAssets =[];
+    let currentFilter = 'All'; // 'All', 'Free', 'Paid'
     let currentSort = 'default';
     let currentSearch = '';
 
-    // Загрузка по умолчанию
+    // Изначальная загрузка из репозитория
     fetch('data.json')
         .then(response => response.json())
-        .then(data => processData(data))
+        .then(data => processData(data, false))
         .catch(err => {
-            resultsInfo.innerHTML = 'Загрузите свой JSON файл с помощью кнопки выше.';
-            console.log('Нет дефолтного data.json. Ожидание файла пользователя.');
+            dbInfo.innerHTML = '<span style="color: #ff5252;">data.json не найден</span>';
+            console.log('Ожидание ручной загрузки файла.');
         });
 
-    // Обработка загрузки пользовательского файла
+    // Обработка ручной загрузки файла
     fileInput.addEventListener('change', (e) => {
         const file = e.target.files[0];
         if (!file) return;
@@ -40,25 +30,19 @@ document.addEventListener('DOMContentLoaded', () => {
         reader.onload = (event) => {
             try {
                 const data = JSON.parse(event.target.result);
-                processData(data);
-                resultsInfo.style.color = "var(--success)";
-                resultsInfo.textContent = "Файл успешно загружен!";
-                setTimeout(() => renderAssets(), 1500);
+                processData(data, true);
             } catch (err) {
-                resultsInfo.style.color = "var(--accent-secondary)";
-                resultsInfo.textContent = "Ошибка: неверный формат JSON файла.";
+                alert("Ошибка: неверный формат JSON файла.");
             }
         };
         reader.readAsText(file);
     });
 
-    // Парсинг данных
-    function processData(data) {
+    function processData(data, isManual) {
         allAssets = data.map(asset => {
             let parsedPrice = 0;
             let isUnknown = false;
             
-            // Обработка цены
             let priceStr = String(asset.Price).toLowerCase();
             if (asset.IsFree || priceStr === 'free' || priceStr === 'бесплатно') {
                 parsedPrice = 0;
@@ -78,20 +62,27 @@ document.addEventListener('DOMContentLoaded', () => {
                 lowerPublisher: (asset.Publisher || '').toLowerCase()
             };
         });
+
+        dbInfo.innerHTML = `База загружена:<br><strong style="color:var(--text-main); font-size:16px;">${allAssets.length}</strong> шт.`;
+        if (isManual) {
+            // Сбрасываем фильтры при новой загрузке
+            searchInput.value = '';
+            currentSearch = '';
+            document.querySelector('input[value="All"]').checked = true;
+            currentFilter = 'All';
+        }
         renderAssets();
     }
 
-    // Слушатели событий интерфейса
+    // Слушатели фильтров
     searchInput.addEventListener('input', (e) => {
         currentSearch = e.target.value.toLowerCase();
         renderAssets();
     });
 
-    filterBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-            filterBtns.forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            currentFilter = btn.dataset.filter;
+    radioBtns.forEach(radio => {
+        radio.addEventListener('change', (e) => {
+            currentFilter = e.target.value;
             renderAssets();
         });
     });
@@ -101,22 +92,24 @@ document.addEventListener('DOMContentLoaded', () => {
         renderAssets();
     });
 
-    // Отрисовка
     function renderAssets() {
-        resultsInfo.style.color = "var(--text-secondary)";
+        // Фильтрация
         const filtered = allAssets.filter(asset => {
             if (currentSearch && !asset.lowerName.includes(currentSearch) && !asset.lowerPublisher.includes(currentSearch)) {
                 return false;
             }
-            if (currentFilter === 'Free' && !asset.IsFree) return false;
-            if (currentFilter === 'Paid' && (asset.IsFree || asset.isUnknown)) return false;
+            if (currentFilter === 'Free' && !asset.IsFree && asset.parsedPrice !== 0) return false;
+            if (currentFilter === 'Paid' && (asset.IsFree || asset.parsedPrice === 0 || asset.isUnknown)) return false;
             return true;
         });
 
+        // Сортировка
         if (currentSort !== 'default') {
             filtered.sort((a, b) => {
                 if (currentSort === 'name-asc') {
                     return a.lowerName.localeCompare(b.lowerName);
+                } else if (currentSort === 'name-desc') {
+                    return b.lowerName.localeCompare(a.lowerName);
                 } else if (currentSort === 'price-asc' || currentSort === 'price-desc') {
                     const priceA = a.parsedPrice;
                     const priceB = b.parsedPrice;
@@ -129,53 +122,42 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
-        resultsInfo.textContent = `Найдено ассетов: ${filtered.length}`;
-        assetGrid.innerHTML = '';
+        resultsCount.textContent = `${filtered.length} items`;
+        assetList.innerHTML = '';
 
         if (filtered.length === 0) {
-            assetGrid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:3rem; color:var(--text-secondary);"><h3>Ничего не найдено.</h3></div>`;
+            assetList.innerHTML = `<div class="empty-state"><h2>No assets found</h2><p>Try adjusting your search or filters.</p></div>`;
             return;
         }
 
+        // Рендер списка
         let html = '';
         filtered.forEach((asset) => {
-            const isFree = asset.IsFree || String(asset.Price).toLowerCase() === 'free';
-            const priceClass = isFree ? 'asset-price free' : 'asset-price';
-            const displayPrice = isFree ? 'Бесплатно' : (asset.Price || 'Неизвестно');
-            const imageSrc = asset.ImageURL || 'https://via.placeholder.com/400x200/2a2a35/9ea3b5?text=No+Image';
-            const storeUrl = asset.AssetURL || '#';
+            const isFree = asset.IsFree || asset.parsedPrice === 0;
+            const badgeClass = isFree ? 'badge free' : 'badge';
+            const displayPrice = isFree ? 'Free' : (asset.Price || 'Unknown');
+            const imageSrc = asset.ImageURL || 'https://via.placeholder.com/140x90/e0e0e0/555555?text=No+Image';
+            const storeUrl = asset.AssetURL || `https://assetstore.unity.com/?q=${encodeURIComponent(asset.Asset)}&orderBy=1`;
 
             html += `
-                <div class="asset-card">
+                <div class="asset-item">
                     <div class="asset-image">
-                        <img src="${imageSrc}" alt="${asset.Asset}" loading="lazy" onerror="this.src='https://via.placeholder.com/400x200/2a2a35/9ea3b5?text=No+Image'" />
+                        <img src="${imageSrc}" alt="${asset.Asset}" loading="lazy" onerror="this.src='https://via.placeholder.com/140x90/222429/959595?text=No+Image'" />
                     </div>
-                    <div class="asset-content">
+                    <div class="asset-info">
+                        <div class="asset-pub">${asset.Publisher}</div>
                         <h3 class="asset-title">${asset.Asset}</h3>
-                        <div class="asset-publisher">
-                            <svg class="publisher-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                                <circle cx="12" cy="7" r="4"></circle>
-                            </svg>
-                            ${asset.Publisher}
+                        <div class="asset-badges">
+                            <span class="${badgeClass}">${displayPrice}</span>
                         </div>
-                        <div class="asset-footer">
-                            <span class="${priceClass}">${displayPrice}</span>
-                            <a href="${storeUrl}" target="_blank" class="store-btn">Открыть в<br>Asset Store</a>
-                        </div>
+                    </div>
+                    <div class="asset-action">
+                        <a href="${storeUrl}" target="_blank" class="btn-open">Open in Store</a>
                     </div>
                 </div>
             `;
         });
-        assetGrid.innerHTML = html;
-        document.querySelectorAll('.asset-card').forEach(card => observer.observe(card));
+        
+        assetList.innerHTML = html;
     }
-
-    const backToTopBtn = document.getElementById('backToTopBtn');
-    window.addEventListener('scroll', () => {
-        backToTopBtn.classList.toggle('show', window.scrollY > 300);
-    });
-    backToTopBtn.addEventListener('click', () => {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    });
 });
