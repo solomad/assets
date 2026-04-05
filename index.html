@@ -8,6 +8,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
+	<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23222c37'><path d='M11.23 1l-7.79 4.5v9L11.23 19l7.79-4.5v-9L11.23 1zm6.5 12.75l-6.5 3.75-6.5-3.75v-7.5l6.5-3.75 6.5 3.75v7.5z'/></svg>">
 </head>
 <body>
     <!-- Hidden SVG for half-star gradient -->
@@ -31,13 +32,13 @@
             
             <div class="nav-actions">
                 <div class="grid-select-wrapper">
-                    <label for="gridColsSelect">Cards/Row:</label>
+                    <label for="gridColsSelect">Scale</label>
                     <select id="gridColsSelect" class="grid-select">
-                        <option value="3">3</option>
-                        <option value="4" selected>4</option>
-                        <option value="5">5</option>
-                        <option value="6">6</option>
-                    </select>
+						<option value="4">4</option>
+						<option value="5" selected>5</option>
+						<option value="6">6</option>
+						<option value="7">7</option>
+					</select>
                 </div>
 
                 <label for="fileInput" class="upload-btn" title="Upload fresh data.json">
@@ -47,7 +48,7 @@
                     </svg>
                     <span>Upload JSON</span>
                 </label>
-                <input type="file" id="fileInput" accept=".json" style="display: none;">
+                <input type="file" id="fileInput" accept=".json" style="display: none;" multiple>
             </div>
         </div>
     </header>

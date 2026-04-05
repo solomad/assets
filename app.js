@@ -46,19 +46,28 @@ document.addEventListener('DOMContentLoaded', () => {
             resultsInfo.textContent = 'Database not found. Please upload a JSON file.';
         });
 
-    fileInput.addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = (event) => {
-            try {
-                processData(JSON.parse(event.target.result));
-            } catch (err) {
-                alert("Error: Invalid JSON format.");
-            }
-        };
-        reader.readAsText(file);
-    });
+    fileInput.addEventListener('change', async (e) => {
+		const files = Array.from(e.target.files);
+		if (files.length === 0) return;
+
+		try {
+			const allFileData = await Promise.all(files.map(file => {
+				return new Promise((resolve, reject) => {
+					const reader = new FileReader();
+					reader.onload = (ev) => resolve(JSON.parse(ev.target.result));
+					reader.onerror = reject;
+					reader.readAsText(file);
+				});
+			}));
+
+			// Объединяем все массивы из файлов в один
+			const combinedData = allFileData.flat();
+			processData(combinedData);
+		} catch (err) {
+			alert("Error: One or more files have invalid JSON format.");
+			console.error(err);
+		}
+	});
 
     // 2. DATA PROCESSING
     function processData(data) {

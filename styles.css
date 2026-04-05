@@ -113,19 +113,20 @@ body {
 
 /* Sidebar */
 .sidebar {
-    width: 280px; /* Сделали панель чуть шире */
+    width: 280px;
     flex-shrink: 0;
     position: sticky;
     top: 84px;
     max-height: calc(100vh - 100px);
     overflow-y: auto;
-    scrollbar-width: thin; /* Возвращаем скроллбар для Firefox */
+    
+    /* Скрываем скроллбар */
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE 10+ */
 }
 
-/* Явно возвращаем скроллбары для внутренних элементов в Webkit */
-.sidebar::-webkit-scrollbar { 
-    display: block; 
-    width: 6px; 
+.sidebar::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Edge */
 }
 .sidebar::-webkit-scrollbar-thumb { background-color: #ccc; border-radius: 3px; }
 
@@ -203,10 +204,10 @@ body {
 }
 
 /* Варианты колонок (переключаются через JS) */
-.asset-grid[data-cols="3"] { grid-template-columns: repeat(3, 1fr); }
 .asset-grid[data-cols="4"] { grid-template-columns: repeat(4, 1fr); }
 .asset-grid[data-cols="5"] { grid-template-columns: repeat(5, 1fr); }
 .asset-grid[data-cols="6"] { grid-template-columns: repeat(6, 1fr); }
+.asset-grid[data-cols="7"] { grid-template-columns: repeat(7, 1fr); }
 
 /* Защита на мобильных устройствах */
 @media (max-width: 1300px) {
