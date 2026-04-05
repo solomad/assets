@@ -268,7 +268,8 @@ body {
     font-size: 14px;
     font-weight: 600;
     margin-bottom: 8px;
-    line-height: 1.4;
+    line-height: 1.4em;
+    height: 4.2em; /* 1.4em * 3 строки = фиксированная высота */
     display: -webkit-box;
     -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
@@ -309,9 +310,9 @@ body {
     display: flex;
     align-items: center;
     gap: 2px;
-    margin-bottom: 12px; 
+    margin-bottom: 8px; 
+    height: 16px; /* Фиксируем высоту строки рейтинга */
     font-size: 13px;
-    color: var(--text-main);
 }
 .star {
     width: 16px;
@@ -330,8 +331,10 @@ body {
 .asset-tags {
     display: flex;
     gap: 6px;
-    margin-bottom: 16px;
+    margin-top: auto; /* Это магическая строка: она вытолкнет теги и всё что ниже в самый низ карточки */
+    margin-bottom: 12px;
     flex-wrap: wrap;
+    min-height: 22px; /* Чтобы пустой блок тегов не схлопывал карточку */
 }
 .asset-tag {
     font-size: 11px;
