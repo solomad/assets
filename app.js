@@ -99,28 +99,39 @@ document.addEventListener('DOMContentLoaded', () => {
             };
         });
 
-        const labels = [...new Set(allAssets.map(a => a.Label))].filter(Boolean).sort();
-        
-        // Генерация дерева категорий (включаем все родительские узлы)
-        let categorySet = new Set();
+        // Считаем количество ассетов для фильтров
+        const labelCounts = {};
+        const categoryCounts = {};
+        const publisherCounts = {};
+
         allAssets.forEach(a => {
+            // Метки
+            labelCounts[a.Label] = (labelCounts[a.Label] || 0) + 1;
+
+            // Категории (включаем всех родителей для иерархии)
             let parts = a.Category.split(' > ');
             let currentPath = '';
             parts.forEach(part => {
                 currentPath = currentPath ? currentPath + ' > ' + part : part;
-                categorySet.add(currentPath);
+                categoryCounts[currentPath] = (categoryCounts[currentPath] || 0) + 1;
             });
-        });
-        const categories = Array.from(categorySet).sort();
-        
-        const publishers = [...new Set(allAssets.map(a => a.Publisher))].filter(Boolean).sort((a,b) => a.toLowerCase().localeCompare(b.toLowerCase()));
 
-        buildFilterUI(labels, categories, publishers);
+            // Издатели
+            if (a.Publisher) {
+                publisherCounts[a.Publisher] = (publisherCounts[a.Publisher] || 0) + 1;
+            }
+        });
+
+        const labels = Object.keys(labelCounts).sort();
+        const categories = Object.keys(categoryCounts).sort();
+        const publishers = Object.keys(publisherCounts).sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
+
+        buildFilterUI(labels, categories, publishers, labelCounts, categoryCounts, publisherCounts);
         renderAssets();
     }
 
     // 3. UI BUILDER FOR FILTERS
-    function buildFilterUI(labels, categories, publishers) {
+    function buildFilterUI(labels, categories, publishers, labelCounts, categoryCounts, publisherCounts) {
         labelsList.innerHTML = '';
         categoriesList.innerHTML = '';
         publishersList.innerHTML = '';
@@ -129,15 +140,20 @@ document.addEventListener('DOMContentLoaded', () => {
         selectedCategories.clear();
         selectedPublishers.clear();
 
-        labels.forEach(val => labelsList.appendChild(createCheckbox(val, selectedLabels)));
+        // Построение списка меток с количеством
+        labels.forEach(val => {
+            const count = labelCounts[val];
+            labelsList.appendChild(createCheckbox(val, selectedLabels, `${val} (${count})`));
+        });
         
-        // Построение иерархического списка категорий
+        // Построение иерархического списка категорий с количеством
         categories.forEach(val => {
             let parts = val.split(' > ');
             let depth = parts.length - 1;
             let displayName = parts[depth]; // Показываем только финальную часть имени
+            let count = categoryCounts[val];
             
-            const cb = createCheckbox(val, selectedCategories, displayName);
+            const cb = createCheckbox(val, selectedCategories, `${displayName} (${count})`);
             
             // Визуальный отступ для подкатегорий
             if (depth > 0) {
@@ -148,15 +164,17 @@ document.addEventListener('DOMContentLoaded', () => {
             categoriesList.appendChild(cb);
         });
 
+        // Построение списка издателей с количеством
         publishers.forEach(val => {
-            const cb = createCheckbox(val, selectedPublishers);
+            const count = publisherCounts[val];
+            const cb = createCheckbox(val, selectedPublishers, `${val} (${count})`);
             cb.classList.add('pub-item');
             cb.dataset.name = val.toLowerCase();
             publishersList.appendChild(cb);
         });
     }
 
-    // Добавлен аргумент displayName для разделения значения (Value) и отображаемого имени
+    // Функция создания чекбокса (Value и Отображаемое имя разделены)
     function createCheckbox(value, targetSet, displayName = value) {
         const label = document.createElement('label');
         label.className = 'filter-checkbox';
@@ -204,7 +222,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     function getStarsHtml(rating, count) {
-        // ФИКС ВЫСОТЫ: Если нет рейтинга, возвращаем пустой блок-заглушку того же размера
+        // Если нет рейтинга, возвращаем пустой блок-заглушку того же размера
         if (count === 0 || !rating) {
             return `<div class="rating-stars empty-rating" title="No rating">No reviews yet</div>`;
         }

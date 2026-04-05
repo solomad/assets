@@ -379,6 +379,11 @@ body {
     font-size: 12px;
 }
 
+/* Делаем блок без рейтинга полупрозрачным, чтобы не отвлекал внимание */
+.rating-stars.unrated {
+    opacity: 0.4;
+}
+
 /* Back to Top */
 .back-to-top {
     position: fixed;
@@ -405,3 +410,46 @@ body {
     .top-nav { padding: 0 20px; }
     .sidebar { width: 100%; position: static; max-height: none; }
 }
+
+/* Стили для древовидных категорий */
+.category-tree {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.category-node {
+    display: flex;
+    flex-direction: column;
+}
+.category-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.category-children {
+    margin-left: 22px;
+    display: none; /* скрыто по умолчанию */
+    flex-direction: column;
+    gap: 4px;
+    margin-top: 4px;
+}
+.category-children.open {
+    display: flex; /* показываем при раскрытии */
+}
+.toggle-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    width: 16px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    font-size: 10px;
+    padding: 0;
+    transition: transform 0.2s;
+}
+.toggle-btn:hover { color: var(--text-main); }
+.toggle-btn.open { transform: rotate(180deg); }
+.toggle-btn.empty { visibility: hidden; }
