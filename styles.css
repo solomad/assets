@@ -362,6 +362,23 @@ body {
 }
 .asset-price.free { color: #059669; }
 
+/* === НОВЫЕ СТИЛИ ДЛЯ DEPRECATED И РЕЙТИНГА === */
+
+/* Стили для статуса Deprecated */
+.asset-price.deprecated {
+    color: #dc2626; /* Красный цвет */
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Фикс для пустого рейтинга (чтобы карточки не плясали) */
+.rating-stars.empty-rating {
+    color: var(--text-muted);
+    font-size: 12px;
+}
+
 /* Back to Top */
 .back-to-top {
     position: fixed;
