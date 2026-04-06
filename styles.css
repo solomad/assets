@@ -66,6 +66,12 @@ body.hide-tags .asset-tags { display: none !important; }
     align-items: center; 
     gap: 8px; 
 }
+/* Устанавливаем размер для иконок внутри переключателей */
+.view-toggles .icon-wrapper svg {
+    width: 18px;
+    height: 18px;
+    stroke-width: 2.2px; /* Немного увеличим толщину линий для лучшей видимости при уменьшении */
+}
 
 /* Единый стиль для всех элементов в шапке (иконки, кнопки, бейджи) */
 .header-item {
