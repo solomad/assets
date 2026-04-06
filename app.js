@@ -288,23 +288,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         filtered.forEach(asset => {
-            const rawPrice = String(asset.Price || '').trim().toLowerCase();
-            const isDeprecated = ['deprecated', 'null', ''].includes(rawPrice);
-            const isFree = ['free', 'owned', 'бесплатно'].includes(rawPrice);
-            
-            const priceClass = isDeprecated ? 'asset-price deprecated' : (isFree ? 'asset-price free' : 'asset-price');
-            const displayPrice = isDeprecated ? 'Deprecated' : (asset.Price || '');
-            const pubContent = asset.PublisherURL ? `<a href="${getRefLink(asset.PublisherURL)}" target="_blank">${asset.Publisher}</a>` : asset.Publisher;
+			const card = document.createElement('div');
+			card.className = 'asset-card';
+			
+			const priceClass = asset.parsedPrice === 0 ? 'asset-price free' : 'asset-price';
+			const displayPrice = asset.Price === 'Deprecated' ? 'Deprecated' : asset.Price;
+			
+			// Проверяем, активен ли фильтр именно по этому автору
+			const isActive = selectedPublishers.has(asset.Publisher) && selectedPublishers.size === 1;
+			const pubTag = `<span class="pub-tag">${asset.Publisher}</span>`;
 
-            const card = document.createElement('div');
-            card.className = 'asset-card';
-            // Заменяем формирование ссылки
-			const pubLink = asset.PublisherURL ? getRefLink(asset.PublisherURL) : '#';
-			const pubTag = asset.PublisherURL 
-				? `<a href="${pubLink}" class="pub-name-link" target="_blank" title="${asset.Publisher}">${asset.Publisher}</a>` 
-				: `<span class="pub-name-link" title="${asset.Publisher}">${asset.Publisher}</span>`;
-
-			// В card.innerHTML заменяем <div class="asset-publisher">...</div> на:
 			card.innerHTML = `
 				<div class="asset-image">
 					<img src="${asset.ImageURL || 'https://via.placeholder.com/600x400?text=No+Image'}" loading="lazy" onerror="this.src='https://via.placeholder.com/600x400?text=No+Image'">
@@ -315,8 +308,11 @@ document.addEventListener('DOMContentLoaded', () => {
 					</h3>
 					<div class="asset-publisher">
 						${pubTag}
-						<button class="filter-pub-btn" data-publisher="${asset.Publisher}" title="Оставить только ассеты этого автора">
-							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
+						<button class="filter-pub-btn ${isActive ? 'active' : ''}" data-publisher="${asset.Publisher}" title="${isActive ? 'Показать все' : 'Только этот автор'}">
+							${isActive 
+								? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>` 
+								: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>` 
+							}
 						</button>
 					</div>
 					${getStarsHtml(asset.parsedRating, asset.parsedCount)}
@@ -329,28 +325,34 @@ document.addEventListener('DOMContentLoaded', () => {
 					</div>
 				</div>
 			`;
-            assetGrid.appendChild(card);
-            observer.observe(card);
-        });
+			assetGrid.appendChild(card);
+			observer.observe(card);
+		});
     }
 
     const backToTopBtn = document.getElementById('backToTopBtn');
     window.addEventListener('scroll', () => backToTopBtn.classList.toggle('show', window.scrollY > 300));
     backToTopBtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
 	
-		// Фильтрация по клику на воронку
+	// Фильтрация по клику на воронку (с функцией сброса)
 	assetGrid.addEventListener('click', (e) => {
 		const btn = e.target.closest('.filter-pub-btn');
 		if (btn) {
 			const pub = btn.dataset.publisher;
+			const isCurrentFilter = selectedPublishers.has(pub) && selectedPublishers.size === 1;
+
+			if (isCurrentFilter) {
+				// Если этот автор уже выбран — сбрасываем фильтр
+				selectedPublishers.clear();
+			} else {
+				// Иначе — выбираем только этого автора
+				selectedPublishers.clear();
+				selectedPublishers.add(pub);
+			}
 			
-			// Очищаем все остальные фильтры авторов и ставим текущего
-			selectedPublishers.clear();
-			selectedPublishers.add(pub);
-			
-			// Синхронизируем состояние с чекбоксами в левом меню
+			// Синхронизируем левое меню
 			document.querySelectorAll('#publishersList input[type="checkbox"]').forEach(cb => {
-				cb.checked = (cb.value === pub);
+				cb.checked = selectedPublishers.has(cb.value);
 			});
 			
 			window.scrollTo({ top: 0, behavior: 'smooth' });

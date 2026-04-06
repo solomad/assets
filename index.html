@@ -30,36 +30,44 @@
             </div>
             
             <div class="nav-actions">
-				<div class="view-toggles" style="display: flex; gap: 12px; border-right: 1px solid rgba(255,255,255,0.2); padding-right: 12px; margin-right: 4px;">
-					<label class="toggle-label" title="Показывать рейтинг">
-						<input type="checkbox" id="toggleRatings" checked> ⭐
-					</label>
-					<label class="toggle-label" title="Показывать теги">
-						<input type="checkbox" id="toggleTags" checked> 🏷️
-					</label>
+				<div class="nav-controls-group">
+					<div class="view-toggles">
+						<label class="icon-toggle" title="Рейтинг">
+							<input type="checkbox" id="toggleRatings" checked>
+							<span class="icon-wrapper">
+								<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+							</span>
+						</label>
+						<label class="icon-toggle" title="Теги">
+							<input type="checkbox" id="toggleTags" checked>
+							<span class="icon-wrapper">
+								<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>
+							</span>
+						</label>
+					</div>
+					
+					<div class="grid-select-wrapper">
+						<svg class="grid-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+						<select id="gridColsSelect" class="grid-select">
+							<option value="4">4</option>
+							<option value="5">5</option>
+							<option value="6" selected>6</option>
+							<option value="7">7</option>
+						</select>
+					</div>
 				</div>
-                <div class="grid-select-wrapper">
-                    <label for="gridColsSelect">Scale</label>
-                    <select id="gridColsSelect" class="grid-select">
-                        <option value="4">4</option>
-                        <option value="5" selected>5</option>
-                        <option value="6">6</option>
-                        <option value="7">7</option>
-                    </select>
-                </div>
 
-                <label for="fileInput" class="upload-btn" title="Upload fresh data.json">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                        <polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line>
-                    </svg>
-                    <span>Upload JSON</span>
-                </label>
-                <input type="file" id="fileInput" accept=".json" style="display: none;" multiple>
-                
-                <span class="version-badge" title="App Version">v1.1</span>
-            </div>
-        </div>
+				<label for="fileInput" class="upload-btn" title="Upload fresh data.json">
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+						<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+						<polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line>
+					</svg>
+					<span>JSON</span>
+				</label>
+				<input type="file" id="fileInput" accept=".json" style="display: none;" multiple>
+				
+				<span class="version-badge">v1.2</span>
+			</div>
     </header>
 
     <div class="main-layout">

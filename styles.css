@@ -244,16 +244,15 @@ body.hide-tags .asset-tags { display: none !important; }
 }
 
 /* Заголовок: 3 строки текста */
-.asset-title {
-    font-size: 13px; /* Оптимизировано (было 14px) */
-    font-weight: 600;
-    margin-bottom: 6px;
-    line-height: 1.4em;
-    height: 4.2em; /* 1.4em * 3 строки */
+.asset-title { 
+    font-size: 13px; 
+    margin-bottom: 6px; 
+    height: 4.2em; /* Было 2.8em, возвращаем 3 строки */
     display: -webkit-box;
-    -webkit-line-clamp: 3; 
+    -webkit-line-clamp: 3; /* Было 2, возвращаем 3 */
     -webkit-box-orient: vertical;
     overflow: hidden;
+    line-height: 1.4;
 }
 .asset-title a { color: var(--text-main); text-decoration: none; transition: color 0.2s; }
 .asset-title a:hover { color: var(--unity-blue); }
@@ -370,3 +369,53 @@ body.hide-tags .asset-tags { display: none !important; }
     .sidebar { width: 100%; position: static; max-height: none; }
 }
 @media (max-width: 600px) { .asset-grid[data-cols] { grid-template-columns: 1fr; } }
+/* Группа управления в шапке */
+.nav-controls-group {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    opacity: 0.2; /* Почти прозрачные по умолчанию */
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    padding-right: 15px;
+    border-right: 1px solid rgba(255,255,255,0.1);
+}
+
+/* При наведении на ЛЮБОЕ место шапки проявляем управление */
+.top-nav:hover .nav-controls-group {
+    opacity: 1;
+}
+
+/* Стили для иконок-переключателей */
+.icon-toggle { cursor: pointer; display: flex; align-items: center; }
+.icon-toggle input { display: none; } /* Прячем стандартный чекбокс */
+
+.icon-wrapper {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    color: #666; /* Выключенное состояние (серый) */
+    background: rgba(255,255,255,0.05);
+    transition: all 0.2s;
+}
+
+/* Состояния включено (зеленый/синий) */
+.icon-toggle input:checked + .icon-wrapper {
+    color: #4ade80; /* Зеленый неон */
+    background: rgba(74, 222, 128, 0.1);
+}
+
+.icon-toggle:hover .icon-wrapper {
+    background: rgba(255,255,255,0.1);
+    transform: scale(1.1);
+}
+
+.grid-icon { width: 18px; color: #aaa; }
+
+/* Кнопка автора в карточке (Активное состояние) */
+.filter-pub-btn.active {
+    background: #ef4444; /* Красный для сброса */
+    color: white;
+}
