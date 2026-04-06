@@ -20,6 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let selectedCategories = new Set();
     let selectedPublishers = new Set();
 
+    // Lazy load observer
     const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
@@ -30,18 +31,18 @@ document.addEventListener('DOMContentLoaded', () => {
     }, { rootMargin: '50px 0px', threshold: 0.1 });
 
     function updateGridCols() {
-        if(assetGrid && gridColsSelect) {
+        if (assetGrid && gridColsSelect) {
             assetGrid.setAttribute('data-cols', gridColsSelect.value);
         }
     }
     gridColsSelect.addEventListener('change', updateGridCols);
     updateGridCols(); 
 
-    // 1. DATA LOADING
+    // --- 1. DATA LOADING ---
     fetch('data.json')
         .then(response => response.json())
         .then(data => processData(data))
-        .catch(err => {
+        .catch(() => {
             resultsInfo.textContent = 'Database not found. Please upload a JSON file.';
         });
 
@@ -58,16 +59,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     reader.readAsText(file);
                 });
             }));
-
-            const combinedData = allFileData.flat();
-            processData(combinedData);
+            processData(allFileData.flat());
         } catch (err) {
             alert("Error: One or more files have invalid JSON format.");
             console.error(err);
         }
     });
 
-	// 2. DATA PROCESSING
+    // --- 2. DATA PROCESSING ---
     function processData(data) {
         if (!Array.isArray(data)) return;
 
@@ -75,15 +74,13 @@ document.addEventListener('DOMContentLoaded', () => {
             let parsedPrice = 0;
             let priceStr = String(asset.Price || '').toLowerCase().trim();
             
-            // Обработка Deprecated или пустой цены приравнивается к 0 для сортировки
-            if (priceStr === 'free' || priceStr === 'бесплатно' || priceStr === '' || priceStr === 'owned' || priceStr === 'deprecated' || priceStr === 'null') {
+            if (['free', 'бесплатно', '', 'owned', 'deprecated', 'null'].includes(priceStr)) {
                 parsedPrice = 0;
             } else {
                 const match = priceStr.match(/[\d.]+/);
                 parsedPrice = match ? parseFloat(match[0]) : 0;
             }
 
-            // Нормализация путей категорий (меняем слэши на >, убираем лишние пробелы)
             let rawCategory = asset.Category || 'Other';
             let categoryPath = rawCategory.split(/(?:\s*>\s*|\s*\/\s*)/).join(' > ');
 
@@ -99,7 +96,6 @@ document.addEventListener('DOMContentLoaded', () => {
             };
         });
 
-        // Считаем количество ассетов для каждой категории и всех её родительских уровней
         const cumulativeCounts = {};
         allAssets.forEach(asset => {
             const parts = asset.Category.split(' > ');
@@ -118,7 +114,7 @@ document.addEventListener('DOMContentLoaded', () => {
         renderAssets();
     }
 
-    // 3. UI BUILDER FOR FILTERS
+    // --- 3. UI BUILDER FOR FILTERS ---
     function buildFilterUI(labels, categories, publishers, cumulativeCounts) {
         labelsList.innerHTML = '';
         categoriesList.innerHTML = '';
@@ -138,33 +134,23 @@ document.addEventListener('DOMContentLoaded', () => {
             const categoryWrapper = document.createElement('div');
             categoryWrapper.className = 'category-wrapper';
             categoryWrapper.dataset.path = val;
-            // Показываем только корневые категории (у которых depth === 0), остальные скрываем
-			if (depth > 0) {
-				categoryWrapper.style.display = 'none';
-			} else {
-				categoryWrapper.style.display = 'flex';
-			}
+            categoryWrapper.style.display = depth > 0 ? 'none' : 'flex';
             categoryWrapper.style.justifyContent = 'space-between';
             categoryWrapper.style.alignItems = 'center';
             categoryWrapper.style.marginBottom = '4px';
             
-            const cb = createCheckbox(val, selectedCategories, displayName);
-            categoryWrapper.appendChild(cb);
+            categoryWrapper.appendChild(createCheckbox(val, selectedCategories, displayName));
             
-            // Проверяем, есть ли подкатегории (так как массив отсортирован, подкатегории идут сразу после родителя)
             const hasChildren = index + 1 < categories.length && categories[index + 1].startsWith(val + ' > ');
             
             if (hasChildren) {
                 const toggle = document.createElement('span');
-				toggle.className = 'category-toggle'; // Убрали класс expanded
-				toggle.style.transform = 'rotate(-90deg)'; // Сразу повернули стрелку вправо (закрыто)
+                toggle.className = 'category-toggle';
+                toggle.style.transform = 'rotate(-90deg)';
                 toggle.style.cursor = 'pointer';
-                toggle.style.display = 'flex';
-                toggle.style.alignItems = 'center';
-                toggle.style.transition = 'transform 0.2s';
-                toggle.innerHTML = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--text-muted);"><polyline points="6 9 12 15 18 9"></polyline></svg>`;
+                toggle.innerHTML = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>`;
                 
-                toggle.addEventListener('click', (e) => {
+                toggle.addEventListener('click', () => {
                     const isExpanded = toggle.classList.toggle('expanded');
                     toggle.style.transform = isExpanded ? 'rotate(0deg)' : 'rotate(-90deg)';
                     
@@ -173,37 +159,28 @@ document.addEventListener('DOMContentLoaded', () => {
                     
                     allWrappers.forEach(wrap => {
                         const childPath = wrap.dataset.path;
-                        const childPartsCount = childPath.split(' > ').length;
-                        
                         if (childPath.startsWith(val + ' > ')) {
                             if (!isExpanded) {
-                                // Если сворачиваем родителя, скрываем ВСЕХ потомков на любой глубине
                                 wrap.style.display = 'none';
                                 const childToggle = wrap.querySelector('.category-toggle');
                                 if (childToggle) {
                                     childToggle.classList.remove('expanded');
                                     childToggle.style.transform = 'rotate(-90deg)';
                                 }
-                            } else {
-                                // Если разворачиваем, показываем только ПРЯМЫХ потомков (на 1 уровень глубже)
-                                if (childPartsCount === parentPartsCount + 1) {
-                                    wrap.style.display = 'flex';
-                                }
+                            } else if (childPath.split(' > ').length === parentPartsCount + 1) {
+                                wrap.style.display = 'flex';
                             }
                         }
                     });
                 });
-                
                 categoryWrapper.appendChild(toggle);
             }
             
-            // Визуальный отступ
             if (depth > 0) {
                 categoryWrapper.style.marginLeft = `${depth * 14}px`;
                 categoryWrapper.style.borderLeft = '1px solid var(--border-color)';
                 categoryWrapper.style.paddingLeft = '8px';
             }
-            
             categoriesList.appendChild(categoryWrapper);
         });
 
@@ -215,7 +192,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Функция создания чекбокса (Value и Отображаемое имя разделены)
     function createCheckbox(value, targetSet, displayName = value) {
         const label = document.createElement('label');
         label.className = 'filter-checkbox';
@@ -224,8 +200,7 @@ document.addEventListener('DOMContentLoaded', () => {
         input.type = 'checkbox';
         input.value = value;
         input.addEventListener('change', (e) => {
-            if (e.target.checked) targetSet.add(value);
-            else targetSet.delete(value);
+            e.target.checked ? targetSet.add(value) : targetSet.delete(value);
             renderAssets();
         });
 
@@ -237,7 +212,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return label;
     }
 
-    // 4. SEARCH & SORTING
+    // --- 4. SEARCH & SORTING EVENTS ---
     searchInput.addEventListener('input', (e) => {
         currentSearch = e.target.value.toLowerCase();
         renderAssets();
@@ -245,10 +220,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     publisherSearch.addEventListener('input', (e) => {
         const term = e.target.value.toLowerCase();
-        const items = publishersList.querySelectorAll('.pub-item');
-        items.forEach(item => {
-            const isMatch = item.dataset.name.includes(term);
-            item.style.display = isMatch ? 'flex' : 'none';
+        publishersList.querySelectorAll('.pub-item').forEach(item => {
+            item.style.display = item.dataset.name.includes(term) ? 'flex' : 'none';
         });
     });
 
@@ -257,50 +230,32 @@ document.addEventListener('DOMContentLoaded', () => {
         renderAssets();
     });
 
-    const getRefLink = (url) => {
-        if (!url) return '#';
-        return url.includes('?') ? url + '&aid=1100lebp8' : url + '?aid=1100lebp8';
-    };
+    const getRefLink = (url) => url ? (url.includes('?') ? `${url}&aid=1100lebp8` : `${url}?aid=1100lebp8`) : '#';
 
     function getStarsHtml(rating, count) {
-        // Если нет рейтинга, возвращаем пустой блок-заглушку того же размера
-        if (count === 0 || !rating) {
-            return `<div class="rating-stars empty-rating" title="No rating">No reviews yet</div>`;
+        if (!count || !rating) {
+            return `<div class="rating-stars unrated" title="No ratings yet">${`<svg class="star empty" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>`.repeat(5)} <span class="rating-count">(0)</span></div>`;
         }
         
         let stars = '';
         for (let i = 1; i <= 5; i++) {
-            if (rating >= i) {
-                stars += `<svg class="star filled" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>`;
-            } else if (rating >= i - 0.5) {
-                stars += `<svg class="star half" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>`;
-            } else {
-                stars += `<svg class="star empty" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>`;
-            }
+            const starClass = rating >= i ? 'filled' : (rating >= i - 0.5 ? 'half' : 'empty');
+            stars += `<svg class="star ${starClass}" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>`;
         }
         return `<div class="rating-stars" title="Rating: ${rating} (${count} reviews)">${stars} <span class="rating-count">(${count})</span></div>`;
     }
 
-    // 5. MAIN RENDER FUNCTION
+    // --- 5. MAIN RENDER FUNCTION ---
     function renderAssets() {
         const filtered = allAssets.filter(asset => {
             if (currentSearch && !asset.lowerName.includes(currentSearch)) return false;
             if (selectedLabels.size > 0 && !selectedLabels.has(asset.Label)) return false;
             if (selectedPublishers.size > 0 && !selectedPublishers.has(asset.Publisher)) return false;
             
-            // Логика фильтрации по подкатегориям
             if (selectedCategories.size > 0) {
-                let match = false;
-                for (let selectedCat of selectedCategories) {
-                    // Проверяем, совпадает ли категория или является ли она подкатегорией выбранной
-                    if (asset.Category === selectedCat || asset.Category.startsWith(selectedCat + ' > ')) {
-                        match = true;
-                        break;
-                    }
-                }
-                if (!match) return false;
+                const isMatch = Array.from(selectedCategories).some(cat => asset.Category === cat || asset.Category.startsWith(`${cat} > `));
+                if (!isMatch) return false;
             }
-            
             return true;
         });
 
@@ -309,15 +264,11 @@ document.addEventListener('DOMContentLoaded', () => {
             if (currentSort === 'price-asc') return a.parsedPrice - b.parsedPrice;
             if (currentSort === 'price-desc') return b.parsedPrice - a.parsedPrice;
             
-            if (currentSort === 'rating-desc') {
-                if (b.parsedRating !== a.parsedRating) return b.parsedRating - a.parsedRating;
-                return b.parsedCount - a.parsedCount; 
-            }
+            if (currentSort === 'rating-desc') return b.parsedRating !== a.parsedRating ? b.parsedRating - a.parsedRating : b.parsedCount - a.parsedCount;
             if (currentSort === 'rating-asc') {
                 if (a.parsedRating === 0 && b.parsedRating !== 0) return 1; 
                 if (b.parsedRating === 0 && a.parsedRating !== 0) return -1;
-                if (a.parsedRating !== b.parsedRating) return a.parsedRating - b.parsedRating;
-                return a.parsedCount - b.parsedCount; 
+                return a.parsedRating !== b.parsedRating ? a.parsedRating - b.parsedRating : a.parsedCount - b.parsedCount; 
             }
             return 0; 
         });
@@ -331,42 +282,26 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         filtered.forEach(asset => {
-            // Определение статуса (Deprecated / Free / Paid)
-            const rawPrice = String(asset.Price || '').trim();
-            const isDeprecated = rawPrice === '' || rawPrice.toLowerCase() === 'deprecated' || rawPrice.toLowerCase() === 'null';
-            const isFree = rawPrice.toLowerCase() === 'free' || rawPrice.toLowerCase() === 'owned' || rawPrice.toLowerCase() === 'бесплатно';
+            const rawPrice = String(asset.Price || '').trim().toLowerCase();
+            const isDeprecated = ['deprecated', 'null', ''].includes(rawPrice);
+            const isFree = ['free', 'owned', 'бесплатно'].includes(rawPrice);
             
-            let priceClass = 'asset-price';
-            let displayPrice = asset.Price || '';
-
-            if (isDeprecated) {
-                priceClass = 'asset-price deprecated';
-                displayPrice = 'Deprecated';
-            } else if (isFree) {
-                priceClass = 'asset-price free';
-            }
-
-            const imageSrc = asset.ImageURL || 'https://via.placeholder.com/600x400?text=No+Image';
-            const pubContent = asset.PublisherURL 
-                ? `<a href="${getRefLink(asset.PublisherURL)}" target="_blank">${asset.Publisher}</a>`
-                : asset.Publisher;
-
-            const ratingHtml = getStarsHtml(asset.parsedRating, asset.parsedCount);
+            const priceClass = isDeprecated ? 'asset-price deprecated' : (isFree ? 'asset-price free' : 'asset-price');
+            const displayPrice = isDeprecated ? 'Deprecated' : (asset.Price || '');
+            const pubContent = asset.PublisherURL ? `<a href="${getRefLink(asset.PublisherURL)}" target="_blank">${asset.Publisher}</a>` : asset.Publisher;
 
             const card = document.createElement('div');
             card.className = 'asset-card';
             card.innerHTML = `
                 <div class="asset-image">
-                    <img src="${imageSrc}" loading="lazy" onerror="this.src='https://via.placeholder.com/600x400?text=No+Image'">
+                    <img src="${asset.ImageURL || 'https://via.placeholder.com/600x400?text=No+Image'}" loading="lazy" onerror="this.src='https://via.placeholder.com/600x400?text=No+Image'">
                 </div>
                 <div class="asset-content">
                     <h3 class="asset-title" title="${asset.Asset}">
                         <a href="${getRefLink(asset.AssetURL)}" target="_blank">${asset.Asset}</a>
                     </h3>
                     <div class="asset-publisher">${pubContent}</div>
-                    
-                    ${ratingHtml}
-
+                    ${getStarsHtml(asset.parsedRating, asset.parsedCount)}
                     <div class="asset-tags">
                         <span class="asset-tag">${asset.Label}</span>
                         <span class="asset-tag" title="${asset.Category}">${asset.Category.split(' > ').pop()}</span>
@@ -382,10 +317,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const backToTopBtn = document.getElementById('backToTopBtn');
-    window.addEventListener('scroll', () => {
-        backToTopBtn.classList.toggle('show', window.scrollY > 300);
-    });
-    backToTopBtn.addEventListener('click', () => {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    });
+    window.addEventListener('scroll', () => backToTopBtn.classList.toggle('show', window.scrollY > 300));
+    backToTopBtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
 });

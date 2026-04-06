@@ -8,10 +8,9 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
-	<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23222c37'><path d='M11.23 1l-7.79 4.5v9L11.23 19l7.79-4.5v-9L11.23 1zm6.5 12.75l-6.5 3.75-6.5-3.75v-7.5l6.5-3.75 6.5 3.75v7.5z'/></svg>">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23222c37'><path d='M11.23 1l-7.79 4.5v9L11.23 19l7.79-4.5v-9L11.23 1zm6.5 12.75l-6.5 3.75-6.5-3.75v-7.5l6.5-3.75 6.5 3.75v7.5z'/></svg>">
 </head>
 <body>
-    <!-- Hidden SVG for half-star gradient -->
     <svg width="0" height="0" style="position: absolute; width: 0; height: 0; overflow: hidden;">
         <defs>
             <linearGradient id="halfStarGrad" x1="0%" y1="0%" x2="100%" y2="0%">
@@ -34,11 +33,11 @@
                 <div class="grid-select-wrapper">
                     <label for="gridColsSelect">Scale</label>
                     <select id="gridColsSelect" class="grid-select">
-						<option value="4">4</option>
-						<option value="5" selected>5</option>
-						<option value="6">6</option>
-						<option value="7">7</option>
-					</select>
+                        <option value="4">4</option>
+                        <option value="5" selected>5</option>
+                        <option value="6">6</option>
+                        <option value="7">7</option>
+                    </select>
                 </div>
 
                 <label for="fileInput" class="upload-btn" title="Upload fresh data.json">
@@ -49,23 +48,21 @@
                     <span>Upload JSON</span>
                 </label>
                 <input type="file" id="fileInput" accept=".json" style="display: none;" multiple>
+                
+                <span class="version-badge" title="App Version">v1.0</span>
             </div>
         </div>
     </header>
 
     <div class="main-layout">
-        <!-- Results Grid -->
         <main class="content-area">
             <div class="results-header">
                 <h2 id="resultsInfo">Loading database...</h2>
             </div>
-            
             <div id="assetGrid" class="asset-grid">
-                <!-- Cards -->
-            </div>
+                </div>
         </main>
 
-        <!-- Sidebar filters -->
         <aside class="sidebar">
             <div class="sidebar-block">
                 <h3>Search by Name</h3>
@@ -86,24 +83,18 @@
 
             <div class="sidebar-block">
                 <h3>Labels</h3>
-                <div class="checkbox-list scrollable-list" id="labelsList">
-                    <!-- Populated via JS -->
-                </div>
+                <div class="checkbox-list scrollable-list" id="labelsList"></div>
             </div>
 
             <div class="sidebar-block">
                 <h3>Categories</h3>
-                <div class="checkbox-list scrollable-list" id="categoriesList">
-                    <!-- Populated via JS -->
-                </div>
+                <div class="checkbox-list scrollable-list" id="categoriesList"></div>
             </div>
 
             <div class="sidebar-block">
                 <h3>Publishers</h3>
                 <input type="text" id="publisherSearch" class="search-input pub-search" placeholder="Search publisher...">
-                <div class="checkbox-list scrollable-list" id="publishersList">
-                    <!-- Populated via JS -->
-                </div>
+                <div class="checkbox-list scrollable-list" id="publishersList"></div>
             </div>
         </aside>
     </div>
