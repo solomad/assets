@@ -1,15 +1,19 @@
 document.addEventListener('DOMContentLoaded', () => {
-	const toggleRatings = document.getElementById('toggleRatings');
-	const toggleTags = document.getElementById('toggleTags');
+    const toggleRatings = document.getElementById('toggleRatings');
+    const toggleTags = document.getElementById('toggleTags');
 
-	// Переключаем классы на body
-	toggleRatings?.addEventListener('change', (e) => document.body.classList.toggle('hide-ratings', !e.target.checked));
-	toggleTags?.addEventListener('change', (e) => document.body.classList.toggle('hide-tags', !e.target.checked));
+    // Переключаем классы на body (Так как класс есть изначально, нажатие (true) снимет этот класс, отображая элементы)
+    toggleRatings?.addEventListener('change', (e) => document.body.classList.toggle('hide-ratings', !e.target.checked));
+    toggleTags?.addEventListener('change', (e) => document.body.classList.toggle('hide-tags', !e.target.checked));
+    
     const assetGrid = document.getElementById('assetGrid');
     const searchInput = document.getElementById('searchInput');
     const sortSelect = document.getElementById('sortSelect');
     const resultsInfo = document.getElementById('resultsInfo');
     const fileInput = document.getElementById('fileInput');
+    
+    // Grid controls
+    const gridToggleBtn = document.getElementById('gridToggleBtn');
     const gridColsSelect = document.getElementById('gridColsSelect');
     
     const labelsList = document.getElementById('labelsList');
@@ -36,13 +40,39 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }, { rootMargin: '50px 0px', threshold: 0.1 });
 
-    function updateGridCols() {
-        if (assetGrid && gridColsSelect) {
-            assetGrid.setAttribute('data-cols', gridColsSelect.value);
+    // Обработка Grid селектора
+    gridToggleBtn?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        gridColsSelect.classList.toggle('show');
+    });
+
+    document.addEventListener('click', (e) => {
+        if (gridColsSelect && !gridColsSelect.contains(e.target) && e.target !== gridToggleBtn) {
+            gridColsSelect.classList.remove('show');
+        }
+    });
+
+    gridColsSelect?.addEventListener('click', (e) => {
+        if (e.target.tagName === 'SPAN') {
+            const cols = e.target.dataset.cols;
+            gridColsSelect.querySelectorAll('span').forEach(s => s.classList.remove('active'));
+            e.target.classList.add('active');
+            
+            if (assetGrid) {
+                assetGrid.setAttribute('data-cols', cols);
+            }
+            gridColsSelect.classList.remove('show');
+        }
+    });
+
+    // Инициализация сетки по умолчанию
+    function initGridCols() {
+        const activeSpan = gridColsSelect?.querySelector('span.active');
+        if (activeSpan && assetGrid) {
+            assetGrid.setAttribute('data-cols', activeSpan.dataset.cols);
         }
     }
-    gridColsSelect.addEventListener('change', updateGridCols);
-    updateGridCols(); 
+    initGridCols();
 
     // --- 1. DATA LOADING ---
     fetch('data.json')
@@ -251,6 +281,10 @@ document.addEventListener('DOMContentLoaded', () => {
         return `<div class="rating-stars" title="Rating: ${rating} (${count} reviews)">${stars} <span class="rating-count">(${count})</span></div>`;
     }
 
+    // Иконки авторов
+    const iconPlus = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>`;
+    const iconMinus = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"></line></svg>`;
+
     // --- 5. MAIN RENDER FUNCTION ---
     function renderAssets() {
         const filtered = allAssets.filter(asset => {
@@ -288,75 +322,72 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         filtered.forEach(asset => {
-			const card = document.createElement('div');
-			card.className = 'asset-card';
-			
-			const priceClass = asset.parsedPrice === 0 ? 'asset-price free' : 'asset-price';
-			const displayPrice = asset.Price === 'Deprecated' ? 'Deprecated' : asset.Price;
-			
-			// Проверяем, активен ли фильтр именно по этому автору
-			const isActive = selectedPublishers.has(asset.Publisher) && selectedPublishers.size === 1;
-			const pubTag = `<span class="pub-tag">${asset.Publisher}</span>`;
+            const card = document.createElement('div');
+            card.className = 'asset-card';
+            
+            const priceClass = asset.parsedPrice === 0 ? 'asset-price free' : 'asset-price';
+            const displayPrice = asset.Price === 'Deprecated' ? 'Deprecated' : asset.Price;
+            
+            // Проверяем, активен ли фильтр именно по этому автору
+            const isActive = selectedPublishers.has(asset.Publisher) && selectedPublishers.size === 1;
+            const pubTag = `<span class="pub-tag">${asset.Publisher}</span>`;
 
-			card.innerHTML = `
-				<div class="asset-image">
-					<img src="${asset.ImageURL || 'https://via.placeholder.com/600x400?text=No+Image'}" loading="lazy" onerror="this.src='https://via.placeholder.com/600x400?text=No+Image'">
-				</div>
-				<div class="asset-content">
-					<h3 class="asset-title" title="${asset.Asset}">
-						<a href="${getRefLink(asset.AssetURL)}" target="_blank">${asset.Asset}</a>
-					</h3>
-					<div class="asset-publisher">
-						${pubTag}
-						<button class="filter-pub-btn ${isActive ? 'active' : ''}" data-publisher="${asset.Publisher}" title="${isActive ? 'Показать все' : 'Только этот автор'}">
-							${isActive 
-								? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>` 
-								: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>` 
-							}
-						</button>
-					</div>
-					${getStarsHtml(asset.parsedRating, asset.parsedCount)}
-					<div class="asset-tags">
-						<span class="asset-tag">${asset.Label}</span>
-						<span class="asset-tag" title="${asset.Category}">${asset.Category.split(' > ').pop()}</span>
-					</div>
-					<div class="asset-footer">
-						<span class="${priceClass}">${displayPrice}</span>
-					</div>
-				</div>
-			`;
-			assetGrid.appendChild(card);
-			observer.observe(card);
-		});
+            card.innerHTML = `
+                <div class="asset-image">
+                    <img src="${asset.ImageURL || 'https://via.placeholder.com/600x400?text=No+Image'}" loading="lazy" onerror="this.src='https://via.placeholder.com/600x400?text=No+Image'">
+                </div>
+                <div class="asset-content">
+                    <h3 class="asset-title" title="${asset.Asset}">
+                        <a href="${getRefLink(asset.AssetURL)}" target="_blank">${asset.Asset}</a>
+                    </h3>
+                    <div class="asset-publisher">
+                        ${pubTag}
+                        <button class="filter-pub-btn ${isActive ? 'active' : ''}" data-publisher="${asset.Publisher}" title="${isActive ? 'Сбросить фильтр' : 'Только этот автор'}">
+                            ${isActive ? iconMinus : iconPlus}
+                        </button>
+                    </div>
+                    ${getStarsHtml(asset.parsedRating, asset.parsedCount)}
+                    <div class="asset-tags">
+                        <span class="asset-tag">${asset.Label}</span>
+                        <span class="asset-tag" title="${asset.Category}">${asset.Category.split(' > ').pop()}</span>
+                    </div>
+                    <div class="asset-footer">
+                        <span class="${priceClass}">${displayPrice}</span>
+                    </div>
+                </div>
+            `;
+            assetGrid.appendChild(card);
+            observer.observe(card);
+        });
     }
 
     const backToTopBtn = document.getElementById('backToTopBtn');
     window.addEventListener('scroll', () => backToTopBtn.classList.toggle('show', window.scrollY > 300));
     backToTopBtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
-	
-	// Фильтрация по клику на воронку (с функцией сброса)
-	assetGrid.addEventListener('click', (e) => {
-		const btn = e.target.closest('.filter-pub-btn');
-		if (btn) {
-			const pub = btn.dataset.publisher;
-			const isCurrentFilter = selectedPublishers.has(pub) && selectedPublishers.size === 1;
+    
+    // Фильтрация по клику на кнопку автора (с функцией сброса)
+    assetGrid.addEventListener('click', (e) => {
+        const btn = e.target.closest('.filter-pub-btn');
+        if (btn) {
+            const pub = btn.dataset.publisher;
+            const isCurrentFilter = selectedPublishers.has(pub) && selectedPublishers.size === 1;
 
-			if (isCurrentFilter) {
-				// Если этот автор уже выбран — сбрасываем фильтр
-				selectedPublishers.clear();
-			} else {
-				// Иначе — выбираем только этого автора
-				selectedPublishers.clear();
-				selectedPublishers.add(pub);
-			}
-			
-			// Синхронизируем левое меню
-			document.querySelectorAll('#publishersList input[type="checkbox"]').forEach(cb => {
-				cb.checked = selectedPublishers.has(cb.value);
-			});
-			
-			window.scrollTo({ top: 0, behavior: 'smooth' });
-			renderAssets();
-		}
-	});
+            if (isCurrentFilter) {
+                // Если этот автор уже выбран — сбрасываем фильтр
+                selectedPublishers.clear();
+            } else {
+                // Иначе — выбираем только этого автора
+                selectedPublishers.clear();
+                selectedPublishers.add(pub);
+            }
+            
+            // Синхронизируем левое меню
+            document.querySelectorAll('#publishersList input[type="checkbox"]').forEach(cb => {
+                cb.checked = selectedPublishers.has(cb.value);
+            });
+            
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            renderAssets();
+        }
+    });
 });
