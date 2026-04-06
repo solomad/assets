@@ -138,7 +138,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const categoryWrapper = document.createElement('div');
             categoryWrapper.className = 'category-wrapper';
             categoryWrapper.dataset.path = val;
-            categoryWrapper.style.display = 'flex';
+            // Показываем только корневые категории (у которых depth === 0), остальные скрываем
+			if (depth > 0) {
+				categoryWrapper.style.display = 'none';
+			} else {
+				categoryWrapper.style.display = 'flex';
+			}
             categoryWrapper.style.justifyContent = 'space-between';
             categoryWrapper.style.alignItems = 'center';
             categoryWrapper.style.marginBottom = '4px';
@@ -151,7 +156,8 @@ document.addEventListener('DOMContentLoaded', () => {
             
             if (hasChildren) {
                 const toggle = document.createElement('span');
-                toggle.className = 'category-toggle expanded';
+				toggle.className = 'category-toggle'; // Убрали класс expanded
+				toggle.style.transform = 'rotate(-90deg)'; // Сразу повернули стрелку вправо (закрыто)
                 toggle.style.cursor = 'pointer';
                 toggle.style.display = 'flex';
                 toggle.style.alignItems = 'center';
