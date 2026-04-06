@@ -1,4 +1,10 @@
 document.addEventListener('DOMContentLoaded', () => {
+	const toggleRatings = document.getElementById('toggleRatings');
+	const toggleTags = document.getElementById('toggleTags');
+
+	// Переключаем классы на body
+	toggleRatings?.addEventListener('change', (e) => document.body.classList.toggle('hide-ratings', !e.target.checked));
+	toggleTags?.addEventListener('change', (e) => document.body.classList.toggle('hide-tags', !e.target.checked));
     const assetGrid = document.getElementById('assetGrid');
     const searchInput = document.getElementById('searchInput');
     const sortSelect = document.getElementById('sortSelect');
@@ -292,25 +298,37 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const card = document.createElement('div');
             card.className = 'asset-card';
-            card.innerHTML = `
-                <div class="asset-image">
-                    <img src="${asset.ImageURL || 'https://via.placeholder.com/600x400?text=No+Image'}" loading="lazy" onerror="this.src='https://via.placeholder.com/600x400?text=No+Image'">
-                </div>
-                <div class="asset-content">
-                    <h3 class="asset-title" title="${asset.Asset}">
-                        <a href="${getRefLink(asset.AssetURL)}" target="_blank">${asset.Asset}</a>
-                    </h3>
-                    <div class="asset-publisher">${pubContent}</div>
-                    ${getStarsHtml(asset.parsedRating, asset.parsedCount)}
-                    <div class="asset-tags">
-                        <span class="asset-tag">${asset.Label}</span>
-                        <span class="asset-tag" title="${asset.Category}">${asset.Category.split(' > ').pop()}</span>
-                    </div>
-                    <div class="asset-footer">
-                        <span class="${priceClass}">${displayPrice}</span>
-                    </div>
-                </div>
-            `;
+            // Заменяем формирование ссылки
+			const pubLink = asset.PublisherURL ? getRefLink(asset.PublisherURL) : '#';
+			const pubTag = asset.PublisherURL 
+				? `<a href="${pubLink}" class="pub-name-link" target="_blank" title="${asset.Publisher}">${asset.Publisher}</a>` 
+				: `<span class="pub-name-link" title="${asset.Publisher}">${asset.Publisher}</span>`;
+
+			// В card.innerHTML заменяем <div class="asset-publisher">...</div> на:
+			card.innerHTML = `
+				<div class="asset-image">
+					<img src="${asset.ImageURL || 'https://via.placeholder.com/600x400?text=No+Image'}" loading="lazy" onerror="this.src='https://via.placeholder.com/600x400?text=No+Image'">
+				</div>
+				<div class="asset-content">
+					<h3 class="asset-title" title="${asset.Asset}">
+						<a href="${getRefLink(asset.AssetURL)}" target="_blank">${asset.Asset}</a>
+					</h3>
+					<div class="asset-publisher">
+						${pubTag}
+						<button class="filter-pub-btn" data-publisher="${asset.Publisher}" title="Оставить только ассеты этого автора">
+							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
+						</button>
+					</div>
+					${getStarsHtml(asset.parsedRating, asset.parsedCount)}
+					<div class="asset-tags">
+						<span class="asset-tag">${asset.Label}</span>
+						<span class="asset-tag" title="${asset.Category}">${asset.Category.split(' > ').pop()}</span>
+					</div>
+					<div class="asset-footer">
+						<span class="${priceClass}">${displayPrice}</span>
+					</div>
+				</div>
+			`;
             assetGrid.appendChild(card);
             observer.observe(card);
         });
@@ -319,4 +337,24 @@ document.addEventListener('DOMContentLoaded', () => {
     const backToTopBtn = document.getElementById('backToTopBtn');
     window.addEventListener('scroll', () => backToTopBtn.classList.toggle('show', window.scrollY > 300));
     backToTopBtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+	
+		// Фильтрация по клику на воронку
+	assetGrid.addEventListener('click', (e) => {
+		const btn = e.target.closest('.filter-pub-btn');
+		if (btn) {
+			const pub = btn.dataset.publisher;
+			
+			// Очищаем все остальные фильтры авторов и ставим текущего
+			selectedPublishers.clear();
+			selectedPublishers.add(pub);
+			
+			// Синхронизируем состояние с чекбоксами в левом меню
+			document.querySelectorAll('#publishersList input[type="checkbox"]').forEach(cb => {
+				cb.checked = (cb.value === pub);
+			});
+			
+			window.scrollTo({ top: 0, behavior: 'smooth' });
+			renderAssets();
+		}
+	});
 });

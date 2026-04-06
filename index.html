@@ -30,6 +30,14 @@
             </div>
             
             <div class="nav-actions">
+				<div class="view-toggles" style="display: flex; gap: 12px; border-right: 1px solid rgba(255,255,255,0.2); padding-right: 12px; margin-right: 4px;">
+					<label class="toggle-label" title="Показывать рейтинг">
+						<input type="checkbox" id="toggleRatings" checked> ⭐
+					</label>
+					<label class="toggle-label" title="Показывать теги">
+						<input type="checkbox" id="toggleTags" checked> 🏷️
+					</label>
+				</div>
                 <div class="grid-select-wrapper">
                     <label for="gridColsSelect">Scale</label>
                     <select id="gridColsSelect" class="grid-select">
@@ -49,7 +57,7 @@
                 </label>
                 <input type="file" id="fileInput" accept=".json" style="display: none;" multiple>
                 
-                <span class="version-badge" title="App Version">v1.0</span>
+                <span class="version-badge" title="App Version">v1.1</span>
             </div>
         </div>
     </header>
