@@ -58,59 +58,96 @@ body.hide-tags .asset-tags { display: none !important; }
 .nav-actions {
     display: flex;
     align-items: center;
-    gap: 20px;
-    white-space: nowrap;
+    gap: 12px;
 }
 
-.toggle-label {
+.view-toggles { 
     display: flex; 
     align-items: center; 
-    gap: 4px; 
-    font-size: 14px;
-    cursor: pointer; 
-    user-select: none; 
-    color: white;
+    gap: 8px; 
 }
-.toggle-label input { cursor: pointer; margin: 0; }
 
-.grid-select-wrapper { display: flex; align-items: center; gap: 8px; font-size: 14px; }
-.grid-select {
-    background: rgba(255, 255, 255, 0.1);
-    color: white;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    padding: 6px 10px;
-    border-radius: 4px;
-    outline: none;
-    cursor: pointer;
-    font-family: inherit;
-}
-.grid-select option { background: var(--bg-header); color: white; }
-
-.upload-btn {
+/* Единый стиль для всех элементов в шапке (иконки, кнопки, бейджи) */
+.header-item {
     display: flex;
     align-items: center;
-    gap: 8px;
-    background-color: rgba(255,255,255,0.1);
-    padding: 8px 16px;
-    border-radius: 4px;
+    justify-content: center;
+    height: 32px;
+    padding: 0 10px;
+    border-radius: 6px;
+    color: #9ca3af; /* Серый по умолчанию */
+    background: rgba(255,255,255,0.05);
+    transition: all 0.2s ease;
     cursor: pointer;
-    font-size: 14px;
-    transition: background 0.2s;
-}
-.upload-btn:hover { background-color: rgba(255,255,255,0.2); }
-.upload-btn svg { width: 16px; height: 16px; }
-
-.version-badge {
-    background: rgba(0, 0, 0, 0.3);
-    color: #a1a1aa;
-    padding: 4px 8px;
-    border-radius: 12px;
-    font-size: 11px;
-    font-family: monospace;
-    letter-spacing: 0.5px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    font-size: 13px;
+    font-weight: 500;
     user-select: none;
 }
+
+/* Для квадратных элементов (только иконка) */
+.icon-toggle .icon-wrapper, .grid-dropdown > .icon-wrapper {
+    width: 32px;
+    padding: 0;
+}
+
+/* Hover эффекты (ярче) */
+.header-item:hover {
+    color: #ffffff;
+    background: rgba(255,255,255,0.15);
+}
+
+/* Активные чекбоксы для звезд и тегов (Неон-зеленый) */
+.icon-toggle { cursor: pointer; display: flex; align-items: center; }
+.icon-toggle input { display: none; }
+.icon-toggle input:checked + .icon-wrapper {
+    color: #4ade80;
+    background: rgba(74, 222, 128, 0.1);
+}
+
+/* Кнопка загрузки JSON */
+.upload-btn svg { width: 16px; height: 16px; margin-right: 6px; }
+
+/* Версия */
+.version-badge {
+    cursor: default;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    font-family: monospace;
+    letter-spacing: 0.5px;
+}
+
+/* Grid Dropdown */
+.grid-icon { width: 18px; }
+.grid-dropdown { position: relative; display: flex; align-items: center; }
+.grid-dropdown-content {
+    display: none;
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 8px;
+    background: var(--bg-header);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 6px;
+    padding: 6px;
+    gap: 6px;
+    z-index: 200;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+.grid-dropdown-content.show { display: flex; flex-direction: row; }
+.grid-dropdown-content span {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    color: #9ca3af;
+    cursor: pointer;
+    border-radius: 4px;
+    background: rgba(255,255,255,0.05);
+    font-weight: 600;
+    transition: all 0.2s;
+}
+.grid-dropdown-content span:hover { background: rgba(255,255,255,0.15); color: #fff; }
+.grid-dropdown-content span.active { background: var(--unity-blue); color: #fff; }
 
 /* === LAYOUT & SIDEBAR === */
 .main-layout {
@@ -237,19 +274,18 @@ body.hide-tags .asset-tags { display: none !important; }
 .asset-image img { width: 100%; height: 100%; object-fit: cover; }
 
 .asset-content { 
-    padding: 12px; /* Оптимизировано (было 16px) */
+    padding: 12px;
     display: flex; 
     flex-direction: column; 
     flex-grow: 1; 
 }
 
-/* Заголовок: 3 строки текста */
 .asset-title { 
     font-size: 13px; 
     margin-bottom: 6px; 
-    height: 4.2em; /* Было 2.8em, возвращаем 3 строки */
+    height: 4.2em;
     display: -webkit-box;
-    -webkit-line-clamp: 3; /* Было 2, возвращаем 3 */
+    -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
     overflow: hidden;
     line-height: 1.4;
@@ -257,7 +293,6 @@ body.hide-tags .asset-tags { display: none !important; }
 .asset-title a { color: var(--text-main); text-decoration: none; transition: color 0.2s; }
 .asset-title a:hover { color: var(--unity-blue); }
 
-/* Блок автора и кнопка-фильтр */
 .asset-publisher { 
     display: flex; 
     align-items: center; 
@@ -276,11 +311,12 @@ body.hide-tags .asset-tags { display: none !important; }
 }
 .pub-name-link:hover { color: var(--unity-blue); text-decoration: underline; }
 
+/* Кнопка автора: серый плюс (по дефолту) или серый минус (активный) */
 .filter-pub-btn {
-    background: rgba(0, 80, 230, 0.1); 
+    background: rgba(0, 0, 0, 0.05); 
     border: none; 
     border-radius: 4px;
-    color: var(--unity-blue); 
+    color: #9ca3af; 
     cursor: pointer;
     display: flex; 
     align-items: center; 
@@ -288,10 +324,19 @@ body.hide-tags .asset-tags { display: none !important; }
     width: 22px; 
     height: 22px; 
     flex-shrink: 0; 
-    transition: background 0.2s;
+    transition: all 0.2s ease;
 }
-.filter-pub-btn:hover { background: var(--unity-blue); color: white; }
-.filter-pub-btn svg { width: 12px; height: 12px; stroke-width: 2.5; }
+/* Зеленый ПЛЮС при наведении */
+.filter-pub-btn:not(.active):hover { 
+    background: rgba(34, 197, 94, 0.1); 
+    color: #22c55e; 
+}
+/* Оранжевый МИНУС при наведении */
+.filter-pub-btn.active:hover { 
+    background: rgba(249, 115, 22, 0.1); 
+    color: #f97316; 
+}
+.filter-pub-btn svg { width: 14px; height: 14px; stroke-width: 2.5; }
 
 /* Ratings */
 .rating-stars {
@@ -314,9 +359,8 @@ body.hide-tags .asset-tags { display: none !important; }
     display: flex;
     gap: 6px;
     margin-top: auto;
-    margin-bottom: 8px; /* Оптимизировано */
+    margin-bottom: 8px;
     flex-wrap: wrap;
-    min-height: unset; /* Оптимизировано */
 }
 .asset-tag {
     font-size: 11px;
@@ -333,7 +377,7 @@ body.hide-tags .asset-tags { display: none !important; }
     justify-content: flex-start;
     align-items: center;
     border-top: 1px solid #f0f0f0;
-    padding-top: 8px; /* Оптимизировано (было 12px) */
+    padding-top: 8px;
 }
 .asset-price { font-size: 14px; font-weight: 700; color: var(--text-main); }
 .asset-price.free { color: #059669; }
@@ -369,53 +413,3 @@ body.hide-tags .asset-tags { display: none !important; }
     .sidebar { width: 100%; position: static; max-height: none; }
 }
 @media (max-width: 600px) { .asset-grid[data-cols] { grid-template-columns: 1fr; } }
-/* Группа управления в шапке */
-.nav-controls-group {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    opacity: 0.2; /* Почти прозрачные по умолчанию */
-    transition: opacity 0.3s ease, transform 0.3s ease;
-    padding-right: 15px;
-    border-right: 1px solid rgba(255,255,255,0.1);
-}
-
-/* При наведении на ЛЮБОЕ место шапки проявляем управление */
-.top-nav:hover .nav-controls-group {
-    opacity: 1;
-}
-
-/* Стили для иконок-переключателей */
-.icon-toggle { cursor: pointer; display: flex; align-items: center; }
-.icon-toggle input { display: none; } /* Прячем стандартный чекбокс */
-
-.icon-wrapper {
-    width: 32px;
-    height: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 6px;
-    color: #666; /* Выключенное состояние (серый) */
-    background: rgba(255,255,255,0.05);
-    transition: all 0.2s;
-}
-
-/* Состояния включено (зеленый/синий) */
-.icon-toggle input:checked + .icon-wrapper {
-    color: #4ade80; /* Зеленый неон */
-    background: rgba(74, 222, 128, 0.1);
-}
-
-.icon-toggle:hover .icon-wrapper {
-    background: rgba(255,255,255,0.1);
-    transform: scale(1.1);
-}
-
-.grid-icon { width: 18px; color: #aaa; }
-
-/* Кнопка автора в карточке (Активное состояние) */
-.filter-pub-btn.active {
-    background: #ef4444; /* Красный для сброса */
-    color: white;
-}

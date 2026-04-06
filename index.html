@@ -1,415 +1,127 @@
-:root {
-    --bg-body: #f4f5f6;
-    --bg-header: #222c37;
-    --bg-card: #ffffff;
-    --text-main: #1a1a1a;
-    --text-muted: #666666;
-    --border-color: #d1d5db;
-    --unity-blue: #0050e6;
-    --unity-blue-hover: #003cbd;
-    --star-color: #f59e0b;
-}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unity Asset Archive</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23222c37'><path d='M11.23 1l-7.79 4.5v9L11.23 19l7.79-4.5v-9L11.23 1zm6.5 12.75l-6.5 3.75-6.5-3.75v-7.5l6.5-3.75 6.5 3.75v7.5z'/></svg>">
+</head>
+<body class="hide-ratings hide-tags">
+    <svg width="0" height="0" style="position: absolute; width: 0; height: 0; overflow: hidden;">
+        <defs>
+            <linearGradient id="halfStarGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="50%" stop-color="#f59e0b" />
+                <stop offset="50%" stop-color="#d1d5db" />
+            </linearGradient>
+        </defs>
+    </svg>
 
-/* === RESET & GLOBAL === */
-* { box-sizing: border-box; margin: 0; padding: 0; }
+    <header class="top-nav">
+        <div class="nav-content">
+            <div class="nav-logo">
+                <svg viewBox="0 0 24 24" fill="white" width="24" height="24">
+                    <path d="M11.23 1l-7.79 4.5v9L11.23 19l7.79-4.5v-9L11.23 1zm6.5 12.75l-6.5 3.75-6.5-3.75v-7.5l6.5-3.75 6.5 3.75v7.5z"/>
+                </svg>
+                <span>My Asset Archive</span>
+            </div>
+            
+            <div class="nav-actions">
+                <div class="view-toggles">
+                    <label class="icon-toggle" title="Показать/Скрыть рейтинг">
+                        <input type="checkbox" id="toggleRatings">
+                        <span class="header-item icon-wrapper">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                        </span>
+                    </label>
+                    <label class="icon-toggle" title="Показать/Скрыть теги">
+                        <input type="checkbox" id="toggleTags">
+                        <span class="header-item icon-wrapper">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>
+                        </span>
+                    </label>
+                </div>
+                
+                <div class="grid-dropdown">
+                    <div class="header-item icon-wrapper" id="gridToggleBtn" title="Сетка (выбор колонок)">
+                        <svg class="grid-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                    </div>
+                    <div class="grid-dropdown-content" id="gridColsSelect">
+                        <span data-cols="4">4</span>
+                        <span data-cols="5">5</span>
+                        <span data-cols="6" class="active">6</span>
+                        <span data-cols="7">7</span>
+                    </div>
+                </div>
 
-html { scrollbar-width: none; -ms-overflow-style: none; }
-body::-webkit-scrollbar { display: none; }
+                <label for="fileInput" class="header-item upload-btn" title="Upload fresh data.json">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line>
+                    </svg>
+                    <span>JSON</span>
+                </label>
+                <input type="file" id="fileInput" accept=".json" style="display: none;" multiple>
+                
+                <span class="header-item version-badge">v1.4</span>
+            </div>
+        </div>
+    </header>
 
-body {
-    background-color: var(--bg-body);
-    color: var(--text-main);
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-    line-height: 1.5;
-}
+    <div class="main-layout">
+        <main class="content-area">
+            <div class="results-header">
+                <h2 id="resultsInfo">Loading database...</h2>
+            </div>
+            <div id="assetGrid" class="asset-grid">
+            </div>
+        </main>
 
-/* Переключатели видимости (Rating/Tags) */
-body.hide-ratings .rating-stars { display: none !important; }
-body.hide-tags .asset-tags { display: none !important; }
+        <aside class="sidebar">
+            <div class="sidebar-block">
+                <h3>Search by Name</h3>
+                <input type="text" id="searchInput" class="search-input" placeholder="Asset name...">
+            </div>
 
-/* === HEADER & NAV === */
-.top-nav {
-    background-color: var(--bg-header);
-    color: white;
-    padding: 0 40px;
-    height: 60px;
-    position: sticky;
-    top: 0;
-    z-index: 100;
-}
+            <div class="sidebar-block">
+                <h3>Sort by</h3>
+                <select id="sortSelect" class="sort-select">
+                    <option value="default">Default</option>
+                    <option value="name-asc">Alphabetical (A-Z)</option>
+                    <option value="price-asc">Price: Low to High</option>
+                    <option value="price-desc">Price: High to Low</option>
+                    <option value="rating-desc">Rating: High to Low</option>
+                    <option value="rating-asc">Rating: Low to High</option>
+                </select>
+            </div>
 
-.nav-content {
-    max-width: 100%;
-    margin: 0 auto;
-    height: 100%;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
+            <div class="sidebar-block">
+                <h3>Labels</h3>
+                <div class="checkbox-list scrollable-list" id="labelsList"></div>
+            </div>
 
-.nav-logo {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    font-size: 18px;
-    font-weight: 600;
-}
+            <div class="sidebar-block">
+                <h3>Categories</h3>
+                <div class="checkbox-list scrollable-list" id="categoriesList"></div>
+            </div>
 
-.nav-actions {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
+            <div class="sidebar-block">
+                <h3>Publishers</h3>
+                <input type="text" id="publisherSearch" class="search-input pub-search" placeholder="Search publisher...">
+                <div class="checkbox-list scrollable-list" id="publishersList"></div>
+            </div>
+        </aside>
+    </div>
 
-.view-toggles { 
-    display: flex; 
-    align-items: center; 
-    gap: 8px; 
-}
+    <button id="backToTopBtn" class="back-to-top" aria-label="Back to top">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="18 15 12 9 6 15"></polyline>
+        </svg>
+    </button>
 
-/* Единый стиль для всех элементов в шапке (иконки, кнопки, бейджи) */
-.header-item {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 32px;
-    padding: 0 10px;
-    border-radius: 6px;
-    color: #9ca3af; /* Серый по умолчанию */
-    background: rgba(255,255,255,0.05);
-    transition: all 0.2s ease;
-    cursor: pointer;
-    font-size: 13px;
-    font-weight: 500;
-    user-select: none;
-}
-
-/* Для квадратных элементов (только иконка) */
-.icon-toggle .icon-wrapper, .grid-dropdown > .icon-wrapper {
-    width: 32px;
-    padding: 0;
-}
-
-/* Hover эффекты (ярче) */
-.header-item:hover {
-    color: #ffffff;
-    background: rgba(255,255,255,0.15);
-}
-
-/* Активные чекбоксы для звезд и тегов (Неон-зеленый) */
-.icon-toggle { cursor: pointer; display: flex; align-items: center; }
-.icon-toggle input { display: none; }
-.icon-toggle input:checked + .icon-wrapper {
-    color: #4ade80;
-    background: rgba(74, 222, 128, 0.1);
-}
-
-/* Кнопка загрузки JSON */
-.upload-btn svg { width: 16px; height: 16px; margin-right: 6px; }
-
-/* Версия */
-.version-badge {
-    cursor: default;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    font-family: monospace;
-    letter-spacing: 0.5px;
-}
-
-/* Grid Dropdown */
-.grid-icon { width: 18px; }
-.grid-dropdown { position: relative; display: flex; align-items: center; }
-.grid-dropdown-content {
-    display: none;
-    position: absolute;
-    top: 100%;
-    right: 0;
-    margin-top: 8px;
-    background: var(--bg-header);
-    border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 6px;
-    padding: 6px;
-    gap: 6px;
-    z-index: 200;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-}
-.grid-dropdown-content.show { display: flex; flex-direction: row; }
-.grid-dropdown-content span {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 32px;
-    height: 32px;
-    color: #9ca3af;
-    cursor: pointer;
-    border-radius: 4px;
-    background: rgba(255,255,255,0.05);
-    font-weight: 600;
-    transition: all 0.2s;
-}
-.grid-dropdown-content span:hover { background: rgba(255,255,255,0.15); color: #fff; }
-.grid-dropdown-content span.active { background: var(--unity-blue); color: #fff; }
-
-/* === LAYOUT & SIDEBAR === */
-.main-layout {
-    max-width: 100%;
-    margin: 24px auto;
-    padding: 0 40px;
-    display: flex;
-    gap: 40px;
-    align-items: flex-start;
-}
-
-.sidebar {
-    width: 280px;
-    flex-shrink: 0;
-    position: sticky;
-    top: 84px;
-    max-height: calc(100vh - 100px);
-    overflow-y: auto;
-    scrollbar-width: none;
-}
-.sidebar::-webkit-scrollbar { display: none; }
-
-.sidebar-block {
-    margin-bottom: 24px;
-    background: var(--bg-card);
-    padding: 16px;
-    border-radius: 6px;
-    border: 1px solid var(--border-color);
-}
-.sidebar-block h3 { font-size: 14px; font-weight: 600; margin-bottom: 12px; }
-
-.search-input, .sort-select {
-    width: 100%;
-    padding: 10px 12px;
-    border: 1px solid var(--border-color);
-    border-radius: 4px;
-    font-family: inherit;
-    font-size: 14px;
-}
-.pub-search { margin-bottom: 10px; }
-.search-input:focus, .sort-select:focus { outline: none; border-color: var(--unity-blue); }
-
-.checkbox-list { display: flex; flex-direction: column; gap: 8px; }
-.scrollable-list {
-    max-height: 250px;
-    overflow-y: auto;
-    padding-right: 5px;
-    scrollbar-width: thin;
-}
-.scrollable-list::-webkit-scrollbar { display: block; width: 4px; }
-.scrollable-list::-webkit-scrollbar-thumb { background-color: #ddd; border-radius: 2px; }
-
-.filter-checkbox {
-    display: flex;
-    align-items: flex-start;
-    gap: 8px;
-    font-size: 13px;
-    color: var(--text-muted);
-    cursor: pointer;
-    line-height: 1.3;
-}
-.filter-checkbox input { margin-top: 2px; cursor: pointer; }
-.filter-checkbox:hover { color: var(--text-main); }
-
-/* === CATEGORY TREE === */
-.category-wrapper {
-    transition: background-color 0.2s;
-    border-radius: 4px;
-    padding-right: 4px;
-}
-.category-wrapper:hover { background-color: rgba(0, 80, 230, 0.05); }
-.category-wrapper[style*="margin-left"] {
-    border-left: 1px solid #e5e7eb !important;
-    margin-top: 1px;
-}
-.category-wrapper .filter-checkbox {
-    flex-grow: 1;
-    display: flex;
-    align-items: center;
-    overflow: hidden;
-}
-.category-wrapper .filter-checkbox span {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-.category-toggle {
-    width: 24px;
-    height: 24px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 4px;
-    color: var(--text-muted);
-}
-.category-toggle:hover { background-color: rgba(0, 0, 0, 0.05); color: var(--unity-blue); }
-
-/* === GRID & CARDS === */
-.content-area { flex-grow: 1; min-width: 0; }
-.results-header { margin-bottom: 20px; }
-.results-header h2 { font-size: 20px; font-weight: 600; }
-
-.asset-grid { display: grid; gap: 20px; }
-.asset-grid[data-cols="4"] { grid-template-columns: repeat(4, 1fr); }
-.asset-grid[data-cols="5"] { grid-template-columns: repeat(5, 1fr); }
-.asset-grid[data-cols="6"] { grid-template-columns: repeat(6, 1fr); }
-.asset-grid[data-cols="7"] { grid-template-columns: repeat(7, 1fr); }
-
-.asset-card {
-    background: var(--bg-card);
-    border: 1px solid var(--border-color);
-    border-radius: 6px;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    transition: box-shadow 0.2s, transform 0.2s;
-    opacity: 0;
-    transform: translateY(10px);
-}
-.asset-card.visible { opacity: 1; transform: translateY(0); }
-.asset-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.1); transform: translateY(-2px); }
-
-.asset-image { width: 100%; aspect-ratio: 3 / 2; background-color: #eaeaea; overflow: hidden; }
-.asset-image img { width: 100%; height: 100%; object-fit: cover; }
-
-.asset-content { 
-    padding: 12px;
-    display: flex; 
-    flex-direction: column; 
-    flex-grow: 1; 
-}
-
-.asset-title { 
-    font-size: 13px; 
-    margin-bottom: 6px; 
-    height: 4.2em;
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    line-height: 1.4;
-}
-.asset-title a { color: var(--text-main); text-decoration: none; transition: color 0.2s; }
-.asset-title a:hover { color: var(--unity-blue); }
-
-.asset-publisher { 
-    display: flex; 
-    align-items: center; 
-    justify-content: space-between; 
-    margin-bottom: 8px; 
-    gap: 8px;
-    font-size: 12px;
-}
-.pub-name-link {
-    white-space: nowrap; 
-    overflow: hidden; 
-    text-overflow: ellipsis; 
-    flex-grow: 1;
-    color: var(--text-muted);
-    text-decoration: none;
-}
-.pub-name-link:hover { color: var(--unity-blue); text-decoration: underline; }
-
-/* Кнопка автора: серый плюс (по дефолту) или серый минус (активный) */
-.filter-pub-btn {
-    background: rgba(0, 0, 0, 0.05); 
-    border: none; 
-    border-radius: 4px;
-    color: #9ca3af; 
-    cursor: pointer;
-    display: flex; 
-    align-items: center; 
-    justify-content: center;
-    width: 22px; 
-    height: 22px; 
-    flex-shrink: 0; 
-    transition: all 0.2s ease;
-}
-/* Зеленый ПЛЮС при наведении */
-.filter-pub-btn:not(.active):hover { 
-    background: rgba(34, 197, 94, 0.1); 
-    color: #22c55e; 
-}
-/* Оранжевый МИНУС при наведении */
-.filter-pub-btn.active:hover { 
-    background: rgba(249, 115, 22, 0.1); 
-    color: #f97316; 
-}
-.filter-pub-btn svg { width: 14px; height: 14px; stroke-width: 2.5; }
-
-/* Ratings */
-.rating-stars {
-    display: flex;
-    align-items: center;
-    gap: 2px;
-    margin-bottom: 8px; 
-    height: 16px;
-    font-size: 13px;
-}
-.star { width: 16px; height: 16px; flex-shrink: 0; }
-.star.filled { fill: var(--star-color); }
-.star.empty { fill: #d1d5db; }
-.star.half { fill: url(#halfStarGrad); }
-.rating-count { margin-left: 6px; color: var(--text-muted); }
-.rating-stars.unrated { opacity: 0.4; }
-
-/* Tags */
-.asset-tags {
-    display: flex;
-    gap: 6px;
-    margin-top: auto;
-    margin-bottom: 8px;
-    flex-wrap: wrap;
-}
-.asset-tag {
-    font-size: 11px;
-    background: #f0f0f0;
-    color: #555;
-    padding: 2px 6px;
-    border-radius: 4px;
-    height: fit-content;
-}
-
-/* Footer & Price */
-.asset-footer {
-    display: flex;
-    justify-content: flex-start;
-    align-items: center;
-    border-top: 1px solid #f0f0f0;
-    padding-top: 8px;
-}
-.asset-price { font-size: 14px; font-weight: 700; color: var(--text-main); }
-.asset-price.free { color: #059669; }
-.asset-price.deprecated { color: #dc2626; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; }
-
-/* === UI UTILS === */
-.back-to-top {
-    position: fixed;
-    bottom: 30px;
-    right: 30px;
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
-    background: var(--bg-header);
-    color: white;
-    border: none;
-    cursor: pointer;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-    opacity: 0;
-    visibility: hidden;
-    transition: 0.3s;
-    z-index: 1000;
-}
-.back-to-top.show { opacity: 1; visibility: visible; }
-.back-to-top svg { width: 20px; height: 20px; }
-
-/* === RESPONSIVE === */
-@media (max-width: 1300px) { .asset-grid[data-cols] { grid-template-columns: repeat(3, 1fr); } }
-@media (max-width: 900px) { .asset-grid[data-cols] { grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 768px) {
-    .main-layout { flex-direction: column-reverse; padding: 0 20px;} 
-    .top-nav { padding: 0 20px; }
-    .sidebar { width: 100%; position: static; max-height: none; }
-}
-@media (max-width: 600px) { .asset-grid[data-cols] { grid-template-columns: 1fr; } }
+    <script src="app.js"></script>
+</body>
+</html>
