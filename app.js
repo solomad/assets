@@ -22,6 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const publisherSearch = document.getElementById('publisherSearch');
 
     let allAssets = [];
+	let publisherCounts = {};
     
     // Filter States
     let currentSearch = '';
@@ -140,6 +141,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 currentPath = currentPath ? currentPath + ' > ' + part : part;
                 cumulativeCounts[currentPath] = (cumulativeCounts[currentPath] || 0) + 1;
             });
+			
+			publisherCounts[asset.Publisher] = (publisherCounts[asset.Publisher] || 0) + 1;
         });
 
         const labels = [...new Set(allAssets.map(a => a.Label))].filter(Boolean).sort();
@@ -331,6 +334,16 @@ document.addEventListener('DOMContentLoaded', () => {
             // Проверяем, активен ли фильтр именно по этому автору
             const isActive = selectedPublishers.has(asset.Publisher) && selectedPublishers.size === 1;
             const pubTag = `<span class="pub-tag">${asset.Publisher}</span>`;
+            
+            // <-- ДОБАВЛЕНО: Проверяем, больше ли одного ассета у автора
+            const hasMultipleAssets = publisherCounts[asset.Publisher] > 1;
+            
+            // Генерируем кнопку только если ассетов больше 1
+            const pubButtonHtml = hasMultipleAssets ? `
+                <button class="filter-pub-btn ${isActive ? 'active' : ''}" data-publisher="${asset.Publisher}" title="${isActive ? 'Сбросить фильтр' : 'Только этот автор'}">
+                    ${isActive ? iconMinus : iconPlus}
+                </button>
+            ` : '';
 
             card.innerHTML = `
                 <div class="asset-image">
@@ -342,10 +355,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     </h3>
                     <div class="asset-publisher">
                         ${pubTag}
-                        <button class="filter-pub-btn ${isActive ? 'active' : ''}" data-publisher="${asset.Publisher}" title="${isActive ? 'Сбросить фильтр' : 'Только этот автор'}">
-                            ${isActive ? iconMinus : iconPlus}
-                        </button>
-                    </div>
+                        ${pubButtonHtml} </div>
                     ${getStarsHtml(asset.parsedRating, asset.parsedCount)}
                     <div class="asset-tags">
                         <span class="asset-tag">${asset.Label}</span>

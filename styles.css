@@ -318,12 +318,12 @@ body.hide-tags .asset-tags { display: none !important; }
 }
 .pub-name-link:hover { color: var(--unity-blue); text-decoration: underline; }
 
-/* Кнопка автора: серый плюс (по дефолту) или серый минус (активный) */
+/* Кнопка автора: делаем полупрозрачной по умолчанию */
 .filter-pub-btn {
     background: transparent; 
     border: none; 
     border-radius: 4px;
-    color: #ccc; /* Светло-серый цвет для иконки (плюсика/крестика) по умолчанию */
+    color: #ccc; 
     cursor: pointer;
     display: flex; 
     align-items: center; 
@@ -332,27 +332,32 @@ body.hide-tags .asset-tags { display: none !important; }
     height: 22px; 
     flex-shrink: 0; 
     transition: all 0.2s ease;
+    opacity: 0.3; /* <-- ДОБАВЛЕНО: прозрачность 30% по умолчанию */
 }
 
-/* Зеленый ПЛЮС и фон при наведении (состояние покоя) */
+/* При наведении на неактивную кнопку (плюс) — делаем яркой и полностью видимой */
 .filter-pub-btn:not(.active):hover { 
     background: rgba(34, 197, 94, 0.1); 
     color: #22c55e; 
+    opacity: 1; /* <-- ДОБАВЛЕНО: убираем прозрачность */
 }
 
-/* Активное состояние (крестик) - тоже прозрачное и серое в покое */
+/* Активное состояние (крестик/минус) — должно быть видно всегда, чтобы юзер видел фильтр */
 .filter-pub-btn.active {
     background: transparent;
     color: #ccc;
+    opacity: 1; /* <-- ДОБАВЛЕНО: активная кнопка всегда 100% видима */
 }
 
-/* Красный МИНУС и фон при наведении на активную кнопку */
+/* При наведении на активную кнопку */
 .filter-pub-btn.active:hover {
     background: rgba(239, 68, 68, 0.1);
     color: #ef4444; 
+    opacity: 1; 
 }
 
 .filter-pub-btn svg { width: 14px; height: 14px; stroke-width: 2.5; }
+.asset-publisher:hover .filter-pub-btn { opacity: 1; }
 
 /* Ratings */
 .rating-stars {
