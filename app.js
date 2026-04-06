@@ -67,7 +67,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // 2. DATA PROCESSING
+	// 2. DATA PROCESSING
     function processData(data) {
         if (!Array.isArray(data)) return;
 
@@ -99,39 +99,27 @@ document.addEventListener('DOMContentLoaded', () => {
             };
         });
 
-        // Считаем количество ассетов для фильтров
-        const labelCounts = {};
-        const categoryCounts = {};
-        const publisherCounts = {};
-
-        allAssets.forEach(a => {
-            // Метки
-            labelCounts[a.Label] = (labelCounts[a.Label] || 0) + 1;
-
-            // Категории (включаем всех родителей для иерархии)
-            let parts = a.Category.split(' > ');
+        // Считаем количество ассетов для каждой категории и всех её родительских уровней
+        const cumulativeCounts = {};
+        allAssets.forEach(asset => {
+            const parts = asset.Category.split(' > ');
             let currentPath = '';
             parts.forEach(part => {
                 currentPath = currentPath ? currentPath + ' > ' + part : part;
-                categoryCounts[currentPath] = (categoryCounts[currentPath] || 0) + 1;
+                cumulativeCounts[currentPath] = (cumulativeCounts[currentPath] || 0) + 1;
             });
-
-            // Издатели
-            if (a.Publisher) {
-                publisherCounts[a.Publisher] = (publisherCounts[a.Publisher] || 0) + 1;
-            }
         });
 
-        const labels = Object.keys(labelCounts).sort();
-        const categories = Object.keys(categoryCounts).sort();
-        const publishers = Object.keys(publisherCounts).sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
+        const labels = [...new Set(allAssets.map(a => a.Label))].filter(Boolean).sort();
+        const categories = Object.keys(cumulativeCounts).sort();
+        const publishers = [...new Set(allAssets.map(a => a.Publisher))].filter(Boolean).sort((a,b) => a.toLowerCase().localeCompare(b.toLowerCase()));
 
-        buildFilterUI(labels, categories, publishers, labelCounts, categoryCounts, publisherCounts);
+        buildFilterUI(labels, categories, publishers, cumulativeCounts);
         renderAssets();
     }
 
     // 3. UI BUILDER FOR FILTERS
-    function buildFilterUI(labels, categories, publishers, labelCounts, categoryCounts, publisherCounts) {
+    function buildFilterUI(labels, categories, publishers, cumulativeCounts) {
         labelsList.innerHTML = '';
         categoriesList.innerHTML = '';
         publishersList.innerHTML = '';
@@ -140,34 +128,81 @@ document.addEventListener('DOMContentLoaded', () => {
         selectedCategories.clear();
         selectedPublishers.clear();
 
-        // Построение списка меток с количеством
-        labels.forEach(val => {
-            const count = labelCounts[val];
-            labelsList.appendChild(createCheckbox(val, selectedLabels, `${val} (${count})`));
-        });
+        labels.forEach(val => labelsList.appendChild(createCheckbox(val, selectedLabels)));
         
-        // Построение иерархического списка категорий с количеством
-        categories.forEach(val => {
+        categories.forEach((val, index) => {
             let parts = val.split(' > ');
             let depth = parts.length - 1;
-            let displayName = parts[depth]; // Показываем только финальную часть имени
-            let count = categoryCounts[val];
+            let displayName = `${parts[depth]} (${cumulativeCounts[val]})`;
             
-            const cb = createCheckbox(val, selectedCategories, `${displayName} (${count})`);
+            const categoryWrapper = document.createElement('div');
+            categoryWrapper.className = 'category-wrapper';
+            categoryWrapper.dataset.path = val;
+            categoryWrapper.style.display = 'flex';
+            categoryWrapper.style.justifyContent = 'space-between';
+            categoryWrapper.style.alignItems = 'center';
+            categoryWrapper.style.marginBottom = '4px';
             
-            // Визуальный отступ для подкатегорий
-            if (depth > 0) {
-                cb.style.marginLeft = `${depth * 14}px`;
-                cb.style.borderLeft = '2px solid var(--border-color)';
-                cb.style.paddingLeft = '8px';
+            const cb = createCheckbox(val, selectedCategories, displayName);
+            categoryWrapper.appendChild(cb);
+            
+            // Проверяем, есть ли подкатегории (так как массив отсортирован, подкатегории идут сразу после родителя)
+            const hasChildren = index + 1 < categories.length && categories[index + 1].startsWith(val + ' > ');
+            
+            if (hasChildren) {
+                const toggle = document.createElement('span');
+                toggle.className = 'category-toggle expanded';
+                toggle.style.cursor = 'pointer';
+                toggle.style.display = 'flex';
+                toggle.style.alignItems = 'center';
+                toggle.style.transition = 'transform 0.2s';
+                toggle.innerHTML = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--text-muted);"><polyline points="6 9 12 15 18 9"></polyline></svg>`;
+                
+                toggle.addEventListener('click', (e) => {
+                    const isExpanded = toggle.classList.toggle('expanded');
+                    toggle.style.transform = isExpanded ? 'rotate(0deg)' : 'rotate(-90deg)';
+                    
+                    const parentPartsCount = val.split(' > ').length;
+                    const allWrappers = categoriesList.querySelectorAll('.category-wrapper');
+                    
+                    allWrappers.forEach(wrap => {
+                        const childPath = wrap.dataset.path;
+                        const childPartsCount = childPath.split(' > ').length;
+                        
+                        if (childPath.startsWith(val + ' > ')) {
+                            if (!isExpanded) {
+                                // Если сворачиваем родителя, скрываем ВСЕХ потомков на любой глубине
+                                wrap.style.display = 'none';
+                                const childToggle = wrap.querySelector('.category-toggle');
+                                if (childToggle) {
+                                    childToggle.classList.remove('expanded');
+                                    childToggle.style.transform = 'rotate(-90deg)';
+                                }
+                            } else {
+                                // Если разворачиваем, показываем только ПРЯМЫХ потомков (на 1 уровень глубже)
+                                if (childPartsCount === parentPartsCount + 1) {
+                                    wrap.style.display = 'flex';
+                                }
+                            }
+                        }
+                    });
+                });
+                
+                categoryWrapper.appendChild(toggle);
             }
-            categoriesList.appendChild(cb);
+            
+            // Визуальный отступ
+            if (depth > 0) {
+                categoryWrapper.style.marginLeft = `${depth * 14}px`;
+                categoryWrapper.style.borderLeft = '1px solid var(--border-color)';
+                categoryWrapper.style.paddingLeft = '8px';
+            }
+            
+            categoriesList.appendChild(categoryWrapper);
         });
 
-        // Построение списка издателей с количеством
         publishers.forEach(val => {
-            const count = publisherCounts[val];
-            const cb = createCheckbox(val, selectedPublishers, `${val} (${count})`);
+            const cb = createCheckbox(val, selectedPublishers);
             cb.classList.add('pub-item');
             cb.dataset.name = val.toLowerCase();
             publishersList.appendChild(cb);

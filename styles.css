@@ -453,3 +453,16 @@ body {
 .toggle-btn:hover { color: var(--text-main); }
 .toggle-btn.open { transform: rotate(180deg); }
 .toggle-btn.empty { visibility: hidden; }
+
+.category-wrapper .filter-checkbox {
+    flex-grow: 1;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+}
+
+.category-wrapper .filter-checkbox span {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
