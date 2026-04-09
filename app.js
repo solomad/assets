@@ -333,7 +333,10 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // Проверяем, активен ли фильтр именно по этому автору
             const isActive = selectedPublishers.has(asset.Publisher) && selectedPublishers.size === 1;
-            const pubTag = `<span class="pub-tag">${asset.Publisher}</span>`;
+            // Проверяем, есть ли ссылка на издателя. Если есть — делаем <a>, пропуская через getRefLink. Если нет — оставляем <span>.
+			const pubTag = asset.PublisherURL 
+				? `<a href="${getRefLink(asset.PublisherURL)}" target="_blank" class="pub-name-link" title="Open publisher page on Unity">${asset.Publisher}</a>`
+				: `<span class="pub-tag">${asset.Publisher}</span>`;
             
             // <-- ДОБАВЛЕНО: Проверяем, больше ли одного ассета у автора
             const hasMultipleAssets = publisherCounts[asset.Publisher] > 1;
