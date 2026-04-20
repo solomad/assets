@@ -114,6 +114,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
             let rawCategory = asset.Category || 'Other';
             let categoryPath = rawCategory.split(/(?:\s*>\s*|\s*\/\s*)/).join(' > ');
+            
+            // Обратная совместимость для тех, кто спарсил базу до v6.8.2
+            let status = asset.Status || (priceStr === 'deprecated' ? 'Deprecated > Standard' : 'Active');
+            if (status === 'Deprecated') status = 'Deprecated > Standard';
 
             return {
                 ...asset,
@@ -124,11 +128,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 lowerPublisher: (asset.Publisher || '').toLowerCase(),
                 Label: asset.Label || 'No Label',
                 Category: categoryPath,
-                Status: asset.Status || 'Active' // Прямое чтение из базы
+                Status: status 
             };
         });
 
         const cumulativeCounts = {};
+        const cumulativeStatusCounts = {};
+        
         allAssets.forEach(asset => {
             const parts = asset.Category.split(' > ');
             let currentPath = '';
@@ -136,50 +142,45 @@ document.addEventListener('DOMContentLoaded', () => {
                 currentPath = currentPath ? currentPath + ' > ' + part : part;
                 cumulativeCounts[currentPath] = (cumulativeCounts[currentPath] || 0) + 1;
             });
+            
+            const sParts = asset.Status.split(' > ');
+            let sPath = '';
+            sParts.forEach(part => {
+                sPath = sPath ? sPath + ' > ' + part : part;
+                cumulativeStatusCounts[sPath] = (cumulativeStatusCounts[sPath] || 0) + 1;
+            });
+
 			publisherCounts[asset.Publisher] = (publisherCounts[asset.Publisher] || 0) + 1;
         });
 
-        const statuses =[...new Set(allAssets.map(a => a.Status))].filter(Boolean).sort();
+        const statuses = Object.keys(cumulativeStatusCounts).sort();
         const labels =[...new Set(allAssets.map(a => a.Label))].filter(Boolean).sort();
         const categories = Object.keys(cumulativeCounts).sort();
         const publishers =[...new Set(allAssets.map(a => a.Publisher))].filter(Boolean).sort((a,b) => a.toLowerCase().localeCompare(b.toLowerCase()));
 
-        buildFilterUI(statuses, labels, categories, publishers, cumulativeCounts);
+        buildFilterUI(statuses, labels, categories, publishers, cumulativeCounts, cumulativeStatusCounts);
         renderAssets();
     }
 
-    function buildFilterUI(statuses, labels, categories, publishers, cumulativeCounts) {
-        if(statusList) statusList.innerHTML = '';
-        labelsList.innerHTML = '';
-        categoriesList.innerHTML = '';
-        publishersList.innerHTML = '';
-        
-        selectedStatuses.clear();
-        selectedLabels.clear();
-        selectedCategories.clear();
-        selectedPublishers.clear();
-
-        if(statusList) {
-            statuses.forEach(val => statusList.appendChild(createCheckbox(val, selectedStatuses)));
-        }
-        labels.forEach(val => labelsList.appendChild(createCheckbox(val, selectedLabels)));
-        
-        categories.forEach((val, index) => {
+    // Универсальная функция для древовидного рендеринга (статусов и категорий)
+    function buildNestedFilter(container, items, cumulativeCounts, targetSet) {
+        container.innerHTML = '';
+        items.forEach((val, index) => {
             let parts = val.split(' > ');
             let depth = parts.length - 1;
             let displayName = `${parts[depth]} (${cumulativeCounts[val]})`;
             
-            const categoryWrapper = document.createElement('div');
-            categoryWrapper.className = 'category-wrapper';
-            categoryWrapper.dataset.path = val;
-            categoryWrapper.style.display = depth > 0 ? 'none' : 'flex';
-            categoryWrapper.style.justifyContent = 'space-between';
-            categoryWrapper.style.alignItems = 'center';
-            categoryWrapper.style.marginBottom = '4px';
+            const wrapper = document.createElement('div');
+            wrapper.className = 'category-wrapper';
+            wrapper.dataset.path = val;
+            wrapper.style.display = depth > 0 ? 'none' : 'flex';
+            wrapper.style.justifyContent = 'space-between';
+            wrapper.style.alignItems = 'center';
+            wrapper.style.marginBottom = '4px';
             
-            categoryWrapper.appendChild(createCheckbox(val, selectedCategories, displayName));
+            wrapper.appendChild(createCheckbox(val, targetSet, displayName));
             
-            const hasChildren = index + 1 < categories.length && categories[index + 1].startsWith(val + ' > ');
+            const hasChildren = index + 1 < items.length && items[index + 1].startsWith(val + ' > ');
             
             if (hasChildren) {
                 const toggle = document.createElement('span');
@@ -193,7 +194,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     toggle.style.transform = isExpanded ? 'rotate(0deg)' : 'rotate(-90deg)';
                     
                     const parentPartsCount = val.split(' > ').length;
-                    const allWrappers = categoriesList.querySelectorAll('.category-wrapper');
+                    const allWrappers = container.querySelectorAll('.category-wrapper');
                     
                     allWrappers.forEach(wrap => {
                         const childPath = wrap.dataset.path;
@@ -211,17 +212,29 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
                     });
                 });
-                categoryWrapper.appendChild(toggle);
+                wrapper.appendChild(toggle);
             }
             
             if (depth > 0) {
-                categoryWrapper.style.marginLeft = `${depth * 14}px`;
-                categoryWrapper.style.borderLeft = '1px solid var(--border-color)';
-                categoryWrapper.style.paddingLeft = '8px';
+                wrapper.style.marginLeft = `${depth * 14}px`;
+                wrapper.style.borderLeft = '1px solid var(--border-color)';
+                wrapper.style.paddingLeft = '8px';
             }
-            categoriesList.appendChild(categoryWrapper);
+            container.appendChild(wrapper);
         });
+    }
 
+    function buildFilterUI(statuses, labels, categories, publishers, cumulativeCounts, cumulativeStatusCounts) {
+        if(statusList) buildNestedFilter(statusList, statuses, cumulativeStatusCounts, selectedStatuses);
+        
+        labelsList.innerHTML = '';
+        selectedLabels.clear();
+        labels.forEach(val => labelsList.appendChild(createCheckbox(val, selectedLabels)));
+        
+        if(categoriesList) buildNestedFilter(categoriesList, categories, cumulativeCounts, selectedCategories);
+        
+        publishersList.innerHTML = '';
+        selectedPublishers.clear();
         publishers.forEach(val => {
             const cb = createCheckbox(val, selectedPublishers);
             cb.classList.add('pub-item');
@@ -288,10 +301,16 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderAssets() {
         const filtered = allAssets.filter(asset => {
             if (currentSearch && !asset.lowerName.includes(currentSearch)) return false;
-            if (selectedStatuses.size > 0 && !selectedStatuses.has(asset.Status)) return false;
             if (selectedLabels.size > 0 && !selectedLabels.has(asset.Label)) return false;
             if (selectedPublishers.size > 0 && !selectedPublishers.has(asset.Publisher)) return false;
             
+            // Фильтрация по статусу (с поддержкой древовидности)
+            if (selectedStatuses.size > 0) {
+                const isMatch = Array.from(selectedStatuses).some(stat => asset.Status === stat || asset.Status.startsWith(`${stat} > `));
+                if (!isMatch) return false;
+            }
+            
+            // Фильтрация по категориям (с поддержкой древовидности)
             if (selectedCategories.size > 0) {
                 const isMatch = Array.from(selectedCategories).some(cat => asset.Category === cat || asset.Category.startsWith(`${cat} > `));
                 if (!isMatch) return false;
@@ -326,13 +345,18 @@ document.addEventListener('DOMContentLoaded', () => {
             card.className = 'asset-card';
             
             let priceClass = 'asset-price';
-            if (asset.Status === 'Deprecated') {
+            if (asset.Status.startsWith('Deprecated')) {
                 priceClass = 'asset-price deprecated';
             } else if (asset.parsedPrice === 0) {
                 priceClass = 'asset-price free';
             }
             
-            const displayPrice = asset.Status === 'Deprecated' ? 'Deprecated' : asset.Price;
+            // Вывод текста бейджа
+            let displayPrice = asset.Price;
+            if (asset.Status.startsWith('Deprecated')) {
+                let sub = asset.Status.split(' > ')[1];
+                displayPrice = (sub && sub !== 'Standard') ? `Deprecated: ${sub}` : 'Deprecated';
+            }
             
             const isActive = selectedPublishers.has(asset.Publisher) && selectedPublishers.size === 1;
             const pubTag = asset.PublisherURL 
