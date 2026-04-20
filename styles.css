@@ -71,7 +71,7 @@ body.hide-tags .asset-tags { display: none !important; }
 .view-toggles .icon-wrapper svg {
     width: 18px;
     height: 18px;
-    stroke-width: 2.2px; /* Немного увеличим толщину линий для лучшей видимости при уменьшении */
+    stroke-width: 2.2px;
 }
 
 /* Единый стиль для всех элементов в шапке (иконки, кнопки, бейджи) */
@@ -82,7 +82,7 @@ body.hide-tags .asset-tags { display: none !important; }
     height: 32px;
     padding: 0 10px;
     border-radius: 6px;
-    color: #9ca3af; /* Серый по умолчанию */
+    color: #9ca3af;
     background: rgba(255,255,255,0.05);
     transition: all 0.2s ease;
     cursor: pointer;
@@ -318,7 +318,6 @@ body.hide-tags .asset-tags { display: none !important; }
 }
 .pub-name-link:hover { color: var(--unity-blue); text-decoration: underline; }
 
-/* Кнопка автора: делаем полупрозрачной по умолчанию */
 .filter-pub-btn {
     background: transparent; 
     border: none; 
@@ -332,24 +331,21 @@ body.hide-tags .asset-tags { display: none !important; }
     height: 22px; 
     flex-shrink: 0; 
     transition: all 0.2s ease;
-    opacity: 0.3; /* <-- ДОБАВЛЕНО: прозрачность 30% по умолчанию */
+    opacity: 0.3;
 }
 
-/* При наведении на неактивную кнопку (плюс) — делаем яркой и полностью видимой */
 .filter-pub-btn:not(.active):hover { 
     background: rgba(34, 197, 94, 0.1); 
     color: #22c55e; 
-    opacity: 1; /* <-- ДОБАВЛЕНО: убираем прозрачность */
+    opacity: 1;
 }
 
-/* Активное состояние (крестик/минус) — должно быть видно всегда, чтобы юзер видел фильтр */
 .filter-pub-btn.active {
     background: transparent;
     color: #ccc;
-    opacity: 1; /* <-- ДОБАВЛЕНО: активная кнопка всегда 100% видима */
+    opacity: 1;
 }
 
-/* При наведении на активную кнопку */
 .filter-pub-btn.active:hover {
     background: rgba(239, 68, 68, 0.1);
     color: #ef4444; 
@@ -402,7 +398,19 @@ body.hide-tags .asset-tags { display: none !important; }
 }
 .asset-price { font-size: 14px; font-weight: 700; color: var(--text-main); }
 .asset-price.free { color: #059669; }
-.asset-price.deprecated { color: #dc2626; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+/* === ПЛАШКА DEPRECATED === */
+.asset-price.deprecated {
+    color: #ef4444; /* Красный цвет */
+    background: rgba(239, 68, 68, 0.1); /* Полупрозрачный красный фон */
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border: 1px solid rgba(239, 68, 68, 0.2);
+}
 
 /* === UI UTILS === */
 .back-to-top {

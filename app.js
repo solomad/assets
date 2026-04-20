@@ -2,7 +2,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const toggleRatings = document.getElementById('toggleRatings');
     const toggleTags = document.getElementById('toggleTags');
 
-    // Переключаем классы на body (Так как класс есть изначально, нажатие (true) снимет этот класс, отображая элементы)
     toggleRatings?.addEventListener('change', (e) => document.body.classList.toggle('hide-ratings', !e.target.checked));
     toggleTags?.addEventListener('change', (e) => document.body.classList.toggle('hide-tags', !e.target.checked));
     
@@ -12,26 +11,25 @@ document.addEventListener('DOMContentLoaded', () => {
     const resultsInfo = document.getElementById('resultsInfo');
     const fileInput = document.getElementById('fileInput');
     
-    // Grid controls
     const gridToggleBtn = document.getElementById('gridToggleBtn');
     const gridColsSelect = document.getElementById('gridColsSelect');
     
+    const statusList = document.getElementById('statusList');
     const labelsList = document.getElementById('labelsList');
     const categoriesList = document.getElementById('categoriesList');
     const publishersList = document.getElementById('publishersList');
     const publisherSearch = document.getElementById('publisherSearch');
 
-    let allAssets = [];
-	let publisherCounts = {};
+    let allAssets =[];
+    let publisherCounts = {};
     
-    // Filter States
     let currentSearch = '';
     let currentSort = 'default';
+    let selectedStatuses = new Set();
     let selectedLabels = new Set();
     let selectedCategories = new Set();
     let selectedPublishers = new Set();
 
-    // Lazy load observer
     const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
@@ -41,7 +39,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }, { rootMargin: '50px 0px', threshold: 0.1 });
 
-    // Обработка Grid селектора
     gridToggleBtn?.addEventListener('click', (e) => {
         e.stopPropagation();
         gridColsSelect.classList.toggle('show');
@@ -66,7 +63,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Инициализация сетки по умолчанию
     function initGridCols() {
         const activeSpan = gridColsSelect?.querySelector('span.active');
         if (activeSpan && assetGrid) {
@@ -75,7 +71,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     initGridCols();
 
-    // --- 1. DATA LOADING ---
     fetch('data.json')
         .then(response => response.json())
         .then(data => processData(data))
@@ -103,7 +98,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // --- 2. DATA PROCESSING ---
     function processData(data) {
         if (!Array.isArray(data)) return;
 
@@ -129,7 +123,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 lowerName: (asset.Asset || '').toLowerCase(),
                 lowerPublisher: (asset.Publisher || '').toLowerCase(),
                 Label: asset.Label || 'No Label',
-                Category: categoryPath
+                Category: categoryPath,
+                Status: asset.Status || 'Active' // Прямое чтение из базы
             };
         });
 
@@ -141,28 +136,32 @@ document.addEventListener('DOMContentLoaded', () => {
                 currentPath = currentPath ? currentPath + ' > ' + part : part;
                 cumulativeCounts[currentPath] = (cumulativeCounts[currentPath] || 0) + 1;
             });
-			
 			publisherCounts[asset.Publisher] = (publisherCounts[asset.Publisher] || 0) + 1;
         });
 
-        const labels = [...new Set(allAssets.map(a => a.Label))].filter(Boolean).sort();
+        const statuses =[...new Set(allAssets.map(a => a.Status))].filter(Boolean).sort();
+        const labels =[...new Set(allAssets.map(a => a.Label))].filter(Boolean).sort();
         const categories = Object.keys(cumulativeCounts).sort();
-        const publishers = [...new Set(allAssets.map(a => a.Publisher))].filter(Boolean).sort((a,b) => a.toLowerCase().localeCompare(b.toLowerCase()));
+        const publishers =[...new Set(allAssets.map(a => a.Publisher))].filter(Boolean).sort((a,b) => a.toLowerCase().localeCompare(b.toLowerCase()));
 
-        buildFilterUI(labels, categories, publishers, cumulativeCounts);
+        buildFilterUI(statuses, labels, categories, publishers, cumulativeCounts);
         renderAssets();
     }
 
-    // --- 3. UI BUILDER FOR FILTERS ---
-    function buildFilterUI(labels, categories, publishers, cumulativeCounts) {
+    function buildFilterUI(statuses, labels, categories, publishers, cumulativeCounts) {
+        if(statusList) statusList.innerHTML = '';
         labelsList.innerHTML = '';
         categoriesList.innerHTML = '';
         publishersList.innerHTML = '';
         
+        selectedStatuses.clear();
         selectedLabels.clear();
         selectedCategories.clear();
         selectedPublishers.clear();
 
+        if(statusList) {
+            statuses.forEach(val => statusList.appendChild(createCheckbox(val, selectedStatuses)));
+        }
         labels.forEach(val => labelsList.appendChild(createCheckbox(val, selectedLabels)));
         
         categories.forEach((val, index) => {
@@ -251,7 +250,6 @@ document.addEventListener('DOMContentLoaded', () => {
         return label;
     }
 
-    // --- 4. SEARCH & SORTING EVENTS ---
     searchInput.addEventListener('input', (e) => {
         currentSearch = e.target.value.toLowerCase();
         renderAssets();
@@ -284,14 +282,13 @@ document.addEventListener('DOMContentLoaded', () => {
         return `<div class="rating-stars" title="Rating: ${rating} (${count} reviews)">${stars} <span class="rating-count">(${count})</span></div>`;
     }
 
-    // Иконки авторов
     const iconPlus = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>`;
     const iconMinus = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"></line></svg>`;
 
-    // --- 5. MAIN RENDER FUNCTION ---
     function renderAssets() {
         const filtered = allAssets.filter(asset => {
             if (currentSearch && !asset.lowerName.includes(currentSearch)) return false;
+            if (selectedStatuses.size > 0 && !selectedStatuses.has(asset.Status)) return false;
             if (selectedLabels.size > 0 && !selectedLabels.has(asset.Label)) return false;
             if (selectedPublishers.size > 0 && !selectedPublishers.has(asset.Publisher)) return false;
             
@@ -328,20 +325,22 @@ document.addEventListener('DOMContentLoaded', () => {
             const card = document.createElement('div');
             card.className = 'asset-card';
             
-            const priceClass = asset.parsedPrice === 0 ? 'asset-price free' : 'asset-price';
-            const displayPrice = asset.Price === 'Deprecated' ? 'Deprecated' : asset.Price;
+            let priceClass = 'asset-price';
+            if (asset.Status === 'Deprecated') {
+                priceClass = 'asset-price deprecated';
+            } else if (asset.parsedPrice === 0) {
+                priceClass = 'asset-price free';
+            }
             
-            // Проверяем, активен ли фильтр именно по этому автору
+            const displayPrice = asset.Status === 'Deprecated' ? 'Deprecated' : asset.Price;
+            
             const isActive = selectedPublishers.has(asset.Publisher) && selectedPublishers.size === 1;
-            // Проверяем, есть ли ссылка на издателя. Если есть — делаем <a>, пропуская через getRefLink. Если нет — оставляем <span>.
-			const pubTag = asset.PublisherURL 
-				? `<a href="${getRefLink(asset.PublisherURL)}" target="_blank" class="pub-name-link" title="Open publisher page on Unity">${asset.Publisher}</a>`
-				: `<span class="pub-tag">${asset.Publisher}</span>`;
+            const pubTag = asset.PublisherURL 
+                ? `<a href="${getRefLink(asset.PublisherURL)}" target="_blank" class="pub-name-link" title="Open publisher page on Unity">${asset.Publisher}</a>`
+                : `<span class="pub-tag">${asset.Publisher}</span>`;
             
-            // <-- ДОБАВЛЕНО: Проверяем, больше ли одного ассета у автора
             const hasMultipleAssets = publisherCounts[asset.Publisher] > 1;
             
-            // Генерируем кнопку только если ассетов больше 1
             const pubButtonHtml = hasMultipleAssets ? `
                 <button class="filter-pub-btn ${isActive ? 'active' : ''}" data-publisher="${asset.Publisher}" title="${isActive ? 'Сбросить фильтр' : 'Только этот автор'}">
                     ${isActive ? iconMinus : iconPlus}
@@ -378,7 +377,6 @@ document.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('scroll', () => backToTopBtn.classList.toggle('show', window.scrollY > 300));
     backToTopBtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
     
-    // Фильтрация по клику на кнопку автора (с функцией сброса)
     assetGrid.addEventListener('click', (e) => {
         const btn = e.target.closest('.filter-pub-btn');
         if (btn) {
@@ -386,15 +384,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const isCurrentFilter = selectedPublishers.has(pub) && selectedPublishers.size === 1;
 
             if (isCurrentFilter) {
-                // Если этот автор уже выбран — сбрасываем фильтр
                 selectedPublishers.clear();
             } else {
-                // Иначе — выбираем только этого автора
                 selectedPublishers.clear();
                 selectedPublishers.add(pub);
             }
             
-            // Синхронизируем левое меню
             document.querySelectorAll('#publishersList input[type="checkbox"]').forEach(cb => {
                 cb.checked = selectedPublishers.has(cb.value);
             });
