@@ -345,17 +345,35 @@ document.addEventListener('DOMContentLoaded', () => {
             card.className = 'asset-card';
             
             let priceClass = 'asset-price';
+            let inlineStyle = ''; // Переменная для уникального цвета
+            
             if (asset.Status.startsWith('Deprecated')) {
                 priceClass = 'asset-price deprecated';
             } else if (asset.parsedPrice === 0) {
                 priceClass = 'asset-price free';
             }
             
-            // Вывод текста бейджа
+            // Вывод текста бейджа и расчет уникального цвета без хардкода
             let displayPrice = asset.Price;
             if (asset.Status.startsWith('Deprecated')) {
                 let sub = asset.Status.split(' > ')[1];
                 displayPrice = (sub && sub !== 'Standard') ? `Deprecated: ${sub}` : 'Deprecated';
+                
+                // Если есть подстатус, генерируем цвет на основе его текста
+                if (sub && sub !== 'Standard') {
+                    let hash = 0;
+                    for (let i = 0; i < sub.length; i++) {
+                        hash = sub.charCodeAt(i) + ((hash << 5) - hash);
+                    }
+                    
+                    // Ограничиваем палитру теплыми/тревожными цветами (оттенки 320-360 и 0-60)
+                    // Пурпурный -> Розовый -> Красный -> Оранжевый -> Желтый
+                    let hue = (Math.abs(hash) % 100) - 40; 
+                    if (hue < 0) hue += 360;
+                    
+                    // Применяем уникальный HSL цвет для фона, текста и рамки
+                    inlineStyle = `style="color: hsl(${hue}, 80%, 35%); background: hsl(${hue}, 80%, 94%); border-color: hsl(${hue}, 80%, 85%);"`;
+                }
             }
             
             const isActive = selectedPublishers.has(asset.Publisher) && selectedPublishers.size === 1;
@@ -388,7 +406,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <span class="asset-tag" title="${asset.Category}">${asset.Category.split(' > ').pop()}</span>
                     </div>
                     <div class="asset-footer">
-                        <span class="${priceClass}">${displayPrice}</span>
+                        <span class="${priceClass}" ${inlineStyle}>${displayPrice}</span>
                     </div>
                 </div>
             `;
